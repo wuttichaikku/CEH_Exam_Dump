@@ -1,443 +1,629 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CEH Practice &amp; Exam Simulator</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CEH Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* ══════════════════════════════════════
+   TOKENS — light default
+══════════════════════════════════════ */
 :root {
-  --bg:#080c18; --surface:#0e1525; --surface2:#151f35; --border:#1d2d4e;
-  --accent:#00e5ff; --accent2:#7c3aed; --green:#00ff88; --red:#ff3b6b;
-  --yellow:#fbbf24; --text:#e2e8f0; --muted:#64748b;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
-  background:var(--bg); color:var(--text); font-family:'Syne',sans-serif;
-  min-height:100vh;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 20% 10%,rgba(0,229,255,.06) 0%,transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 80%,rgba(124,58,237,.06) 0%,transparent 60%);
+  --bg:        #f5f4f0;
+  --surface:   #ffffff;
+  --surface2:  #f0eeea;
+  --border:    #e2dfd8;
+  --border2:   #ccc9c0;
+  --text:      #1a1916;
+  --text2:     #6b6860;
+  --text3:     #9b9890;
+  --accent:    #2563eb;
+  --accent-bg: #eff6ff;
+  --accent-brd:#bfdbfe;
+  --green:     #16a34a;
+  --green-bg:  #f0fdf4;
+  --green-brd: #bbf7d0;
+  --red:       #dc2626;
+  --red-bg:    #fef2f2;
+  --red-brd:   #fecaca;
+  --yellow:    #d97706;
+  --yellow-bg: #fffbeb;
+  --yellow-brd:#fde68a;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.05);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.10), 0 3px 8px rgba(0,0,0,.06);
+  --radius:    12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --transition: .18s ease;
 }
 
-/* ─── HOME ─── */
+[data-theme="dark"] {
+  --bg:        #111110;
+  --surface:   #1c1b19;
+  --surface2:  #252420;
+  --border:    #2e2c28;
+  --border2:   #3d3b36;
+  --text:      #f0ede8;
+  --text2:     #9b9890;
+  --text3:     #6b6860;
+  --accent:    #3b82f6;
+  --accent-bg: #1e2a3a;
+  --accent-brd:#2d4a6e;
+  --green:     #22c55e;
+  --green-bg:  #0f2318;
+  --green-brd: #166534;
+  --red:       #ef4444;
+  --red-bg:    #2a0f0f;
+  --red-brd:   #7f1d1d;
+  --yellow:    #f59e0b;
+  --yellow-bg: #2a1f0a;
+  --yellow-brd:#78350f;
+  --shadow:    0 1px 3px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.5);
+}
+
+/* ══════════════════════════════════════
+   RESET
+══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  transition:background var(--transition), color var(--transition);
+  line-height:1.6;
+}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;}
+input{font-family:'DM Mono',monospace;}
+
+/* ══════════════════════════════════════
+   THEME TOGGLE
+══════════════════════════════════════ */
+.theme-toggle{
+  position:fixed;top:1.1rem;right:1.1rem;z-index:500;
+  width:44px;height:44px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;transition:all var(--transition);
+}
+.theme-toggle:hover{box-shadow:var(--shadow-md);transform:scale(1.05);}
+
+/* ══════════════════════════════════════
+   HOME
+══════════════════════════════════════ */
 #home{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100vh;padding:2rem;text-align:center;gap:2rem;
+  min-height:100vh;padding:2rem;text-align:center;gap:0;
 }
-.logo-badge{
-  font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;
-  letter-spacing:.2em;color:var(--accent);border:1px solid rgba(0,229,255,.3);
-  padding:.35rem 1.1rem;border-radius:999px;background:rgba(0,229,255,.06);
-  text-transform:uppercase;
+.home-eyebrow{
+  display:inline-flex;align-items:center;gap:.45rem;
+  font-family:'DM Mono',monospace;font-size:.72rem;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);background:var(--accent-bg);
+  border:1px solid var(--accent-brd);
+  padding:.35rem .9rem;border-radius:999px;
+  margin-bottom:1.8rem;
 }
 .home-title{
-  font-size:clamp(2rem,6vw,3.8rem);font-weight:800;line-height:1.1;
-  background:linear-gradient(135deg,#e2e8f0 30%,var(--accent));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  font-size:clamp(2.2rem,5vw,3.6rem);font-weight:300;
+  letter-spacing:-.03em;line-height:1.1;
+  color:var(--text);margin-bottom:.6rem;
 }
-.home-sub{color:var(--muted);font-size:.95rem;max-width:460px;}
-.mode-cards{display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;margin-top:.5rem;}
+.home-title strong{font-weight:600;}
+.home-sub{
+  font-size:.95rem;color:var(--text2);max-width:400px;
+  margin-bottom:3rem;font-weight:400;
+}
+
+.mode-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1rem;
+  width:100%;max-width:580px;
+}
+@media(max-width:520px){.mode-grid{grid-template-columns:1fr;max-width:340px;}}
+
 .mode-card{
-  width:275px;padding:2rem 1.8rem;border-radius:16px;cursor:pointer;
-  border:1.5px solid var(--border);background:var(--surface);
-  transition:all .25s;position:relative;overflow:hidden;text-align:left;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1.8rem;
+  text-align:left;cursor:pointer;
+  box-shadow:var(--shadow);
+  transition:all .22s ease;position:relative;overflow:hidden;
 }
-.mode-card::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,.025));
-  pointer-events:none;
+.mode-card::after{
+  content:'';position:absolute;inset:0;border-radius:var(--radius-lg);
+  opacity:0;transition:opacity .22s;
 }
-.mode-card:hover{transform:translateY(-5px);}
-.mode-card.practice:hover{border-color:var(--green);box-shadow:0 8px 32px rgba(0,255,136,.12);}
-.mode-card.exam:hover{border-color:var(--yellow);box-shadow:0 8px 32px rgba(251,191,36,.12);}
-.mc-icon{font-size:2.2rem;margin-bottom:1rem;}
-.mc-title{font-size:1.2rem;font-weight:700;margin-bottom:.5rem;}
-.mc-desc{font-size:.84rem;color:var(--muted);line-height:1.65;}
-.mc-badge{
-  display:inline-block;margin-top:.9rem;font-family:'JetBrains Mono',monospace;
-  font-size:.68rem;font-weight:700;padding:.22rem .7rem;border-radius:5px;
-}
-.badge-p{background:rgba(0,255,136,.1);color:var(--green);}
-.badge-e{background:rgba(251,191,36,.1);color:var(--yellow);}
+.mode-card.practice::after{background:radial-gradient(circle at 80% 20%, rgba(37,99,235,.06), transparent 60%);}
+.mode-card.exam::after{background:radial-gradient(circle at 80% 20%, rgba(217,119,6,.06), transparent 60%);}
+.mode-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.mode-card:hover::after{opacity:1;}
+.mode-card.practice:hover{border-color:var(--accent-brd);}
+.mode-card.exam:hover{border-color:var(--yellow-brd);}
 
-/* ─── QUIZ SCREEN ─── */
-#quiz{display:none;flex-direction:column;min-height:100vh;}
-
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:.7rem 1.4rem;background:var(--surface);border-bottom:1px solid var(--border);
-  position:sticky;top:0;z-index:100;gap:.8rem;flex-wrap:wrap;
-}
-.tb-left{display:flex;align-items:center;gap:.7rem;}
-.back-btn{
-  background:var(--surface2);border:1px solid var(--border);color:var(--text);
-  padding:.38rem .8rem;border-radius:8px;cursor:pointer;font-size:.78rem;
-  font-family:'Syne',sans-serif;font-weight:600;transition:all .2s;
-}
-.back-btn:hover{border-color:var(--accent);color:var(--accent);}
-.mode-pill{
-  font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:700;
-  padding:.28rem .8rem;border-radius:999px;
-}
-.pill-p{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25);}
-.pill-e{background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
-
-.tb-center{flex:1;max-width:480px;min-width:180px;}
-.prog-bar{height:5px;background:var(--border);border-radius:99px;overflow:hidden;}
-.prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .4s;}
-.prog-labels{display:flex;justify-content:space-between;margin-top:.28rem;
-  font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
-
-.tb-right{display:flex;align-items:center;gap:.8rem;}
-.timer{
-  font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:700;
-  padding:.32rem .9rem;border-radius:8px;background:var(--surface2);
-  border:1px solid var(--border);display:flex;align-items:center;gap:.4rem;
-  transition:all .4s;
-}
-.timer.warn{border-color:var(--yellow);color:var(--yellow);}
-.timer.danger{border-color:var(--red);color:var(--red);animation:blink 1s infinite;}
-@keyframes blink{50%{opacity:.5;}}
-.score-pills{display:flex;gap:.45rem;}
-.spill{
-  font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;
-  padding:.28rem .65rem;border-radius:6px;display:flex;align-items:center;gap:.28rem;
-}
-.spill-c{background:rgba(0,255,136,.1);color:var(--green);}
-.spill-w{background:rgba(255,59,107,.1);color:var(--red);}
-
-/* ─── CARD ─── */
-.quiz-main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;}
-.card{width:100%;max-width:760px;background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
-.q-head{
-  padding:1.1rem 1.7rem;background:var(--surface2);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;gap:.8rem;
-}
-.q-num{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.08em;}
-.multi-tag{
-  font-family:'JetBrains Mono',monospace;font-size:.63rem;font-weight:700;
-  background:rgba(251,191,36,.1);color:var(--yellow);
-  border:1px solid rgba(251,191,36,.25);padding:.18rem .6rem;border-radius:5px;
-}
-.q-body{padding:1.7rem;}
-.q-img{width:100%;max-width:580px;border-radius:10px;margin-bottom:1.2rem;border:1px solid var(--border);display:block;}
-.q-text{font-size:.98rem;line-height:1.72;margin-bottom:1.4rem;}
-
-/* OPTIONS */
-.opts{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.4rem;}
-.opt{
-  display:flex;align-items:flex-start;gap:.85rem;padding:.82rem 1.05rem;
-  border-radius:10px;cursor:pointer;border:1.5px solid var(--border);
-  background:var(--surface2);transition:all .16s;user-select:none;
-}
-.opt:hover:not(.locked){border-color:var(--accent);background:rgba(0,229,255,.04);}
-.opt.sel{border-color:var(--accent2);background:rgba(124,58,237,.09);}
-.opt.ok{border-color:var(--green);background:rgba(0,255,136,.07);}
-.opt.bad{border-color:var(--red);background:rgba(255,59,107,.07);}
-.opt.hint{border-color:var(--green);background:rgba(0,255,136,.04);}
-.opt.locked{cursor:default;}
-.opt-key{
-  min-width:27px;height:27px;border-radius:6px;background:var(--border);
+.mc-icon{
+  width:44px;height:44px;border-radius:10px;
   display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;
-  flex-shrink:0;transition:background .16s;margin-top:.06rem;
+  font-size:1.3rem;margin-bottom:1.1rem;
 }
-.opt.sel .opt-key{background:var(--accent2);}
-.opt.ok  .opt-key{background:var(--green);color:#000;}
-.opt.bad .opt-key{background:var(--red);color:#fff;}
-.opt.hint .opt-key{background:var(--green);color:#000;}
-.opt-text{font-size:.875rem;line-height:1.6;}
+.mc-icon.p{background:var(--accent-bg);}
+.mc-icon.e{background:var(--yellow-bg);}
+.mc-title{font-size:1.05rem;font-weight:600;margin-bottom:.4rem;letter-spacing:-.01em;}
+.mc-desc{font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:1rem;}
+.mc-tag{
+  display:inline-flex;align-items:center;gap:.3rem;
+  font-family:'DM Mono',monospace;font-size:.68rem;font-weight:500;
+  padding:.22rem .65rem;border-radius:6px;
+}
+.tag-p{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-brd);}
+.tag-e{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-brd);}
 
-/* FEEDBACK */
-.feedback{
-  padding:.9rem 1.1rem;border-radius:10px;font-size:.84rem;line-height:1.6;
-  border:1px solid;margin-bottom:1.1rem;display:none;
-}
-.fb-ok{border-color:rgba(0,255,136,.4);background:rgba(0,255,136,.06);color:var(--green);}
-.fb-bad{border-color:rgba(255,59,107,.4);background:rgba(255,59,107,.06);color:var(--red);}
-
-/* ACTIONS */
-.q-actions{
-  padding:1.1rem 1.7rem;border-top:1px solid var(--border);
-  display:flex;gap:.7rem;justify-content:flex-end;flex-wrap:wrap;align-items:center;
-}
-.hint-text{font-size:.78rem;color:var(--muted);flex:1;}
-.btn{
-  padding:.62rem 1.5rem;border-radius:10px;font-family:'Syne',sans-serif;
-  font-size:.85rem;font-weight:700;cursor:pointer;border:none;transition:all .2s;
-}
-.btn-sub{background:linear-gradient(135deg,var(--accent2),#5b21b6);color:#fff;}
-.btn-sub:hover{opacity:.88;transform:translateY(-1px);}
-.btn-sub:disabled{opacity:.35;cursor:not-allowed;transform:none;}
-.btn-next{background:linear-gradient(135deg,var(--accent),#0ea5e9);color:#000;font-weight:800;}
-.btn-next:hover{opacity:.9;transform:translateY(-1px);}
-.btn-skip{background:transparent;color:var(--muted);border:1px solid var(--border);}
-.btn-skip:hover{color:var(--text);border-color:var(--muted);}
-.btn-finish{background:linear-gradient(135deg,var(--yellow),#f59e0b);color:#000;font-weight:800;}
-.btn-finish:hover{opacity:.9;transform:translateY(-1px);}
-
-/* ─── FINAL ─── */
-#final{
-  display:none;min-height:100vh;flex-direction:column;
-  align-items:center;justify-content:center;padding:2rem;gap:1.8rem;text-align:center;
-}
-.result-ring{
-  width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;border:4px solid;
-}
-.ring-pass{border-color:var(--green);box-shadow:0 0 40px rgba(0,255,136,.2);}
-.ring-fail{border-color:var(--red);box-shadow:0 0 40px rgba(255,59,107,.2);}
-.ring-pct{font-size:2.4rem;font-weight:800;font-family:'JetBrains Mono',monospace;}
-.ring-lbl{font-size:.7rem;color:var(--muted);margin-top:.15rem;font-family:'JetBrains Mono',monospace;}
-.result-title{font-size:1.75rem;font-weight:800;}
-.result-sub{color:var(--muted);margin-top:.35rem;font-size:.9rem;}
-.r-stats{display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center;}
-.rstat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.6rem;min-width:110px;}
-.rstat .big{font-size:1.9rem;font-weight:800;font-family:'JetBrains Mono',monospace;}
-.rstat .sm{font-size:.7rem;color:var(--muted);margin-top:.15rem;}
-.pass-bar-wrap{width:100%;max-width:380px;}
-.pass-bar-labels{display:flex;justify-content:space-between;margin-bottom:.35rem;font-size:.75rem;color:var(--muted);}
-.pass-bar-track{background:var(--border);border-radius:99px;height:9px;overflow:hidden;position:relative;}
-.pass-bar-fill{height:100%;border-radius:99px;transition:width 1s ease;}
-.pass-bar-marker{position:absolute;top:0;left:70%;width:2px;height:100%;background:var(--yellow);}
-.r-actions{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;}
-.btn-home2{
-  background:var(--surface2);color:var(--text);border:1px solid var(--border);
-  padding:.65rem 1.5rem;border-radius:10px;font-family:'Syne',sans-serif;
-  font-size:.875rem;font-weight:700;cursor:pointer;transition:all .2s;
-}
-.btn-home2:hover{border-color:var(--accent);color:var(--accent);}
-.btn-retry{
-  background:linear-gradient(135deg,var(--accent2),#5b21b6);color:#fff;
-  padding:.65rem 1.7rem;border-radius:10px;font-family:'Syne',sans-serif;
-  font-size:.875rem;font-weight:800;cursor:pointer;border:none;transition:all .2s;
-}
-.btn-retry:hover{opacity:.9;transform:translateY(-1px);}
-.c-green{color:var(--green);}
-.c-red{color:var(--red);}
-.c-yellow{color:var(--yellow);}
-.c-accent{color:var(--accent);}
-@media(max-width:580px){
-  .topbar{padding:.55rem .9rem;}
-  .q-body{padding:1.2rem;}
-  .q-actions{padding:.9rem 1.2rem;}
-  .mode-card{width:100%;max-width:340px;}
-}
-
-/* ─── PRACTICE DIALOG ─── */
-#practice-dialog{
-  display:none;position:fixed;inset:0;z-index:999;
-  background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+/* ══════════════════════════════════════
+   PRACTICE DIALOG
+══════════════════════════════════════ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:900;
+  background:rgba(0,0,0,.35);backdrop-filter:blur(6px);
   align-items:center;justify-content:center;padding:1rem;
 }
-.pd-box{
+.modal-box{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:20px;padding:2rem;width:100%;max-width:420px;
+  border-radius:var(--radius-lg);padding:2rem;
+  width:100%;max-width:400px;box-shadow:var(--shadow-lg);
+  animation:modalIn .2s ease;
 }
-.pd-title{font-size:1.2rem;font-weight:800;margin-bottom:.35rem;}
-.pd-sub{font-size:.84rem;color:var(--muted);margin-bottom:1.5rem;}
-.pd-presets{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.2rem;}
-.pd-preset{
-  padding:.45rem 1rem;border-radius:8px;cursor:pointer;
-  border:1.5px solid var(--border);background:var(--surface2);
-  font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;
-  color:var(--muted);transition:all .18s;
-}
-.pd-preset:hover,.pd-preset.active{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.08);}
-.pd-custom-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;}
-.pd-custom-label{font-size:.82rem;color:var(--muted);white-space:nowrap;}
-.pd-input{
-  flex:1;background:var(--surface2);border:1.5px solid var(--border);
-  color:var(--text);border-radius:8px;padding:.5rem .8rem;
-  font-family:'JetBrains Mono',monospace;font-size:.9rem;font-weight:700;
-  outline:none;transition:border-color .18s;width:80px;
-}
-.pd-input:focus{border-color:var(--green);}
-.pd-range{font-size:.75rem;color:var(--muted);}
-.pd-actions{display:flex;gap:.7rem;justify-content:flex-end;}
-.pd-cancel{
-  background:transparent;border:1px solid var(--border);color:var(--muted);
-  padding:.55rem 1.2rem;border-radius:8px;font-family:'Syne',sans-serif;
-  font-size:.85rem;font-weight:700;cursor:pointer;transition:all .18s;
-}
-.pd-cancel:hover{border-color:var(--muted);color:var(--text);}
-.pd-start{
-  background:linear-gradient(135deg,var(--green),#00c96e);color:#000;
-  padding:.55rem 1.6rem;border-radius:8px;font-family:'Syne',sans-serif;
-  font-size:.85rem;font-weight:800;cursor:pointer;border:none;transition:all .18s;
-}
-.pd-start:hover{opacity:.88;transform:translateY(-1px);}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px);}to{opacity:1;transform:none;}}
+.modal-title{font-size:1.1rem;font-weight:600;letter-spacing:-.01em;margin-bottom:.3rem;}
+.modal-sub{font-size:.83rem;color:var(--text2);margin-bottom:1.4rem;}
 
-/* ─── TRANSLATE ─── */
-.btn-translate{
-  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
-  padding:.38rem .85rem;border-radius:8px;font-family:'Syne',sans-serif;
-  font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;
-  display:flex;align-items:center;gap:.4rem;
+.preset-grid{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.2rem;}
+.preset-btn{
+  padding:.4rem .9rem;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--surface2);
+  font-family:'DM Mono',monospace;font-size:.78rem;font-weight:500;
+  color:var(--text2);transition:all var(--transition);
 }
-.btn-translate:hover{border-color:var(--accent);color:var(--accent);}
-.btn-translate.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08);}
-.btn-translate.loading{opacity:.6;cursor:not-allowed;}
-.translated-box{
-  background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);
-  border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1.2rem;
-  font-size:.9rem;line-height:1.72;display:none;
-}
-.translated-box .th-label{
-  font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--accent);
-  font-weight:700;letter-spacing:.08em;margin-bottom:.5rem;display:block;
-}
-.translated-box .th-q{margin-bottom:.8rem;}
-.translated-box .th-opt{
-  display:flex;gap:.6rem;padding:.25rem 0;font-size:.85rem;
-}
-.translated-box .th-key{
-  font-family:'JetBrains Mono',monospace;font-weight:700;
-  color:var(--accent);min-width:18px;
+.preset-btn:hover,.preset-btn.active{
+  border-color:var(--accent-brd);background:var(--accent-bg);color:var(--accent);
 }
 
-/* ─── API KEY MODAL ─── */
-#apikey-modal{
-  display:none;position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
-  align-items:center;justify-content:center;padding:1rem;
+.custom-row{display:flex;align-items:center;gap:.7rem;margin-bottom:1.5rem;}
+.custom-label{font-size:.82rem;color:var(--text2);white-space:nowrap;}
+.custom-input{
+  width:90px;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);border-radius:var(--radius-sm);padding:.5rem .75rem;
+  font-family:'DM Mono',monospace;font-size:.9rem;font-weight:500;
+  outline:none;transition:border-color var(--transition);
 }
-.ak-box{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:16px;padding:1.8rem;width:100%;max-width:400px;
+.custom-input:focus{border-color:var(--accent);}
+.custom-range{font-size:.74rem;color:var(--text3);}
+.modal-actions{display:flex;gap:.6rem;justify-content:flex-end;}
+.btn-cancel{
+  background:transparent;border:1px solid var(--border);color:var(--text2);
+  padding:.52rem 1.1rem;border-radius:var(--radius-sm);
+  font-size:.84rem;font-weight:500;transition:all var(--transition);
 }
-.ak-title{font-size:1.1rem;font-weight:800;margin-bottom:.3rem;}
-.ak-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.6;}
+.btn-cancel:hover{border-color:var(--border2);color:var(--text);}
+.btn-confirm{
+  background:var(--accent);color:#fff;
+  padding:.52rem 1.4rem;border-radius:var(--radius-sm);
+  font-size:.84rem;font-weight:600;border:none;transition:all var(--transition);
+}
+.btn-confirm:hover{opacity:.88;transform:translateY(-1px);}
+.btn-confirm.green{background:var(--green);}
+
+/* ══════════════════════════════════════
+   API KEY MODAL
+══════════════════════════════════════ */
 .ak-input{
-  width:100%;background:var(--surface2);border:1.5px solid var(--border);
-  color:var(--text);border-radius:8px;padding:.6rem .9rem;
-  font-family:'JetBrains Mono',monospace;font-size:.8rem;
-  outline:none;transition:border-color .18s;margin-bottom:.5rem;
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);border-radius:var(--radius-sm);padding:.6rem .8rem;
+  font-family:'DM Mono',monospace;font-size:.8rem;
+  outline:none;margin-bottom:.5rem;transition:border-color var(--transition);
 }
 .ak-input:focus{border-color:var(--accent);}
-.ak-note{font-size:.72rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.5;}
+.ak-note{font-size:.74rem;color:var(--text3);margin-bottom:1.4rem;line-height:1.55;}
 .ak-note a{color:var(--accent);text-decoration:none;}
-.ak-actions{display:flex;gap:.6rem;justify-content:flex-end;}
-.ak-cancel{
-  background:transparent;border:1px solid var(--border);color:var(--muted);
-  padding:.5rem 1.1rem;border-radius:8px;font-family:'Syne',sans-serif;
-  font-size:.82rem;font-weight:700;cursor:pointer;transition:all .18s;
+
+/* ══════════════════════════════════════
+   QUIZ SCREEN
+══════════════════════════════════════ */
+#quiz{display:none;flex-direction:column;min-height:100vh;}
+
+/* topbar */
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.7rem 1.2rem;position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;gap:.8rem;
+  box-shadow:0 1px 0 var(--border);
 }
-.ak-cancel:hover{color:var(--text);border-color:var(--muted);}
-.ak-ok{
-  background:linear-gradient(135deg,var(--accent),#0ea5e9);color:#000;
-  padding:.5rem 1.4rem;border-radius:8px;font-family:'Syne',sans-serif;
-  font-size:.82rem;font-weight:800;cursor:pointer;border:none;transition:all .18s;
+.tb-back{
+  width:36px;height:36px;border-radius:var(--radius-sm);
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;transition:all var(--transition);flex-shrink:0;
 }
-.ak-ok:hover{opacity:.88;}
-.ak-saved{font-size:.7rem;color:var(--green);margin-left:.4rem;display:none;}
+.tb-back:hover{border-color:var(--border2);background:var(--bg);}
+.mode-chip{
+  font-family:'DM Mono',monospace;font-size:.68rem;font-weight:500;
+  padding:.22rem .7rem;border-radius:999px;flex-shrink:0;
+}
+.chip-p{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-brd);}
+.chip-e{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-brd);}
+
+.tb-progress{flex:1;min-width:100px;}
+.prog-track{height:4px;background:var(--border);border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .4s ease;width:0%;}
+.prog-meta{display:flex;justify-content:space-between;margin-top:.28rem;
+  font-family:'DM Mono',monospace;font-size:.62rem;color:var(--text3);}
+
+.timer-chip{
+  font-family:'DM Mono',monospace;font-size:.82rem;font-weight:500;
+  padding:.28rem .8rem;border-radius:var(--radius-sm);
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;gap:.35rem;transition:all .4s;flex-shrink:0;
+}
+.timer-chip.warn{background:var(--yellow-bg);border-color:var(--yellow-brd);color:var(--yellow);}
+.timer-chip.danger{background:var(--red-bg);border-color:var(--red-brd);color:var(--red);animation:pulse 1s infinite;}
+@keyframes pulse{50%{opacity:.55;}}
+
+.score-row{display:flex;gap:.4rem;flex-shrink:0;}
+.score-chip{
+  font-family:'DM Mono',monospace;font-size:.72rem;font-weight:500;
+  padding:.25rem .6rem;border-radius:6px;
+  display:flex;align-items:center;gap:.25rem;
+}
+.sc-c{background:var(--green-bg);color:var(--green);}
+.sc-w{background:var(--red-bg);color:var(--red);}
+
+/* main question area */
+.quiz-body{
+  flex:1;display:flex;justify-content:center;
+  padding:1.5rem 1rem 3rem;
+}
+.q-card{
+  width:100%;max-width:720px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-md);overflow:hidden;
+}
+
+.q-card-header{
+  padding:1rem 1.4rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:.8rem;
+  background:var(--surface2);
+}
+.q-label{
+  font-family:'DM Mono',monospace;font-size:.7rem;font-weight:500;
+  color:var(--text3);letter-spacing:.06em;
+}
+.multi-pill{
+  font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;
+  background:var(--yellow-bg);color:var(--yellow);
+  border:1px solid var(--yellow-brd);padding:.18rem .55rem;border-radius:5px;
+}
+.translate-btn{
+  font-size:.75rem;font-weight:500;padding:.28rem .75rem;
+  border-radius:var(--radius-sm);background:var(--surface);
+  border:1px solid var(--border);color:var(--text2);
+  transition:all var(--transition);display:flex;align-items:center;gap:.35rem;
+}
+.translate-btn:hover{border-color:var(--accent-brd);color:var(--accent);background:var(--accent-bg);}
+.translate-btn.on{background:var(--accent-bg);border-color:var(--accent-brd);color:var(--accent);}
+.translate-btn.loading{opacity:.55;cursor:not-allowed;}
+
+.q-card-body{padding:1.5rem 1.4rem;}
+.q-img{
+  width:100%;max-width:560px;border-radius:var(--radius-sm);
+  margin-bottom:1.1rem;border:1px solid var(--border);display:block;
+}
+.q-text{font-size:.975rem;line-height:1.75;color:var(--text);margin-bottom:1.3rem;font-weight:400;}
+
+/* translated box */
+.th-box{
+  background:var(--accent-bg);border:1px solid var(--accent-brd);
+  border-radius:var(--radius-sm);padding:.9rem 1rem;
+  margin-bottom:1.2rem;display:none;
+}
+.th-eyebrow{
+  font-family:'DM Mono',monospace;font-size:.62rem;color:var(--accent);
+  font-weight:500;letter-spacing:.08em;text-transform:uppercase;
+  display:block;margin-bottom:.55rem;
+}
+.th-q{font-size:.875rem;line-height:1.65;margin-bottom:.7rem;color:var(--text);}
+.th-opt{display:flex;gap:.55rem;font-size:.84rem;padding:.2rem 0;color:var(--text);}
+.th-key{font-family:'DM Mono',monospace;font-weight:500;color:var(--accent);min-width:16px;flex-shrink:0;}
+
+/* options */
+.opts{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.2rem;}
+.opt{
+  display:flex;align-items:flex-start;gap:.85rem;
+  padding:.85rem 1rem;border-radius:var(--radius-sm);cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);
+  transition:all .15s ease;user-select:none;
+}
+.opt:hover:not(.locked){border-color:var(--accent-brd);background:var(--accent-bg);}
+.opt.sel{border-color:var(--accent);background:var(--accent-bg);}
+.opt.ok{border-color:var(--green);background:var(--green-bg);}
+.opt.bad{border-color:var(--red);background:var(--red-bg);}
+.opt.hint{border-color:var(--green);background:var(--green-bg);opacity:.7;}
+.opt.locked{cursor:default;}
+.opt-key{
+  min-width:26px;height:26px;border-radius:6px;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:.72rem;font-weight:500;
+  flex-shrink:0;transition:all .15s;margin-top:.08rem;color:var(--text2);
+}
+.opt.sel .opt-key{background:var(--accent);border-color:var(--accent);color:#fff;}
+.opt.ok  .opt-key{background:var(--green);border-color:var(--green);color:#fff;}
+.opt.bad .opt-key{background:var(--red);border-color:var(--red);color:#fff;}
+.opt.hint .opt-key{background:var(--green);border-color:var(--green);color:#fff;}
+.opt-text{font-size:.9rem;line-height:1.6;color:var(--text);}
+
+/* feedback */
+.feedback{
+  padding:.85rem 1rem;border-radius:var(--radius-sm);
+  font-size:.855rem;line-height:1.6;border:1px solid;margin-bottom:1rem;display:none;
+}
+.fb-ok{background:var(--green-bg);border-color:var(--green-brd);color:var(--green);}
+.fb-bad{background:var(--red-bg);border-color:var(--red-brd);color:var(--red);}
+
+/* actions footer */
+.q-card-footer{
+  padding:1rem 1.4rem;border-top:1px solid var(--border);
+  display:flex;gap:.6rem;justify-content:flex-end;align-items:center;
+  background:var(--surface2);
+}
+.hint-label{flex:1;font-size:.78rem;color:var(--text3);}
+
+.btn{
+  padding:.55rem 1.3rem;border-radius:var(--radius-sm);
+  font-size:.855rem;font-weight:600;border:none;
+  transition:all .18s ease;letter-spacing:-.01em;
+}
+.btn-sub{background:var(--accent);color:#fff;}
+.btn-sub:hover{opacity:.88;transform:translateY(-1px);}
+.btn-sub:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.btn-next{background:var(--text);color:var(--bg);}
+.btn-next:hover{opacity:.85;transform:translateY(-1px);}
+.btn-finish{background:var(--green);color:#fff;}
+.btn-finish:hover{opacity:.88;transform:translateY(-1px);}
+.btn-skip{
+  background:transparent;border:1px solid var(--border);
+  color:var(--text2);
+}
+.btn-skip:hover{border-color:var(--border2);color:var(--text);}
+
+/* ══════════════════════════════════════
+   FINAL SCREEN
+══════════════════════════════════════ */
+#final{
+  display:none;min-height:100vh;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:2rem;gap:2rem;text-align:center;
+  background:var(--bg);
+}
+.result-badge{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:130px;height:130px;border-radius:50%;border:2.5px solid;
+}
+.rb-pass{border-color:var(--green);background:var(--green-bg);}
+.rb-fail{border-color:var(--red);background:var(--red-bg);}
+.rb-practice{border-color:var(--accent);background:var(--accent-bg);}
+.rb-pct{font-size:2.2rem;font-weight:300;font-family:'DM Mono',monospace;letter-spacing:-.03em;}
+.rb-pass .rb-pct{color:var(--green);}
+.rb-fail .rb-pct{color:var(--red);}
+.rb-practice .rb-pct{color:var(--accent);}
+.rb-lbl{font-size:.68rem;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em;}
+
+.result-title{font-size:1.6rem;font-weight:600;letter-spacing:-.02em;}
+.result-sub{font-size:.88rem;color:var(--text2);margin-top:.3rem;}
+
+.stats-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;}
+.stat-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:.9rem 1.4rem;min-width:100px;
+  box-shadow:var(--shadow);
+}
+.stat-val{font-size:1.8rem;font-weight:300;font-family:'DM Mono',monospace;letter-spacing:-.02em;}
+.stat-lbl{font-size:.72rem;color:var(--text3);margin-top:.15rem;font-weight:500;}
+.sv-c{color:var(--green);}
+.sv-w{color:var(--red);}
+.sv-s{color:var(--yellow);}
+.sv-t{color:var(--accent);}
+
+.pass-bar-wrap{width:100%;max-width:360px;}
+.pb-labels{display:flex;justify-content:space-between;font-size:.74rem;color:var(--text3);margin-bottom:.4rem;}
+.pb-track{background:var(--border);border-radius:99px;height:8px;overflow:hidden;position:relative;}
+.pb-fill{height:100%;border-radius:99px;transition:width 1s ease;}
+.pb-marker{position:absolute;top:0;left:70%;width:1.5px;height:100%;background:var(--yellow);}
+
+.result-actions{display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;}
+.btn-home-r{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:.6rem 1.4rem;border-radius:var(--radius-sm);
+  font-size:.875rem;font-weight:500;transition:all var(--transition);
+}
+.btn-home-r:hover{border-color:var(--border2);box-shadow:var(--shadow);}
+.btn-retry-r{
+  background:var(--accent);color:#fff;
+  padding:.6rem 1.6rem;border-radius:var(--radius-sm);
+  font-size:.875rem;font-weight:600;border:none;transition:all var(--transition);
+}
+.btn-retry-r:hover{opacity:.88;transform:translateY(-1px);}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media(max-width:580px){
+  .topbar{padding:.55rem .8rem;gap:.5rem;}
+  .q-card-body{padding:1.2rem;}
+  .q-card-footer{padding:.9rem 1.2rem;}
+  .timer-chip span{display:none;}
+}
 </style>
 </head>
 <body>
 
-<!-- ════════════════ HOME ════════════════ -->
+<!-- Theme toggle -->
+<button class="theme-toggle" onclick="toggleTheme()" title="สลับธีม" id="theme-btn">🌙</button>
+
+<!-- ════ HOME ════ -->
 <div id="home">
-  <div class="logo-badge">CEH · Certified Ethical Hacker</div>
-  <h1 class="home-title">Practice &amp; Exam<br>Simulator</h1>
-  <p class="home-sub">เลือกโหมดที่ต้องการเพื่อเริ่มเตรียมสอบ CEH ของคุณ</p>
-  <div class="mode-cards">
+  <div class="home-eyebrow">
+    <span>🛡</span> Certified Ethical Hacker
+  </div>
+  <h1 class="home-title">CEH <strong>Quiz</strong></h1>
+  <p class="home-sub">เตรียมสอบ CEH </p>
+
+  <div class="mode-grid">
     <div class="mode-card practice" onclick="openPracticeDialog()">
-      <div class="mc-icon">📚</div>
+      <div class="mc-icon p">📚</div>
       <div class="mc-title">Practice Mode</div>
-      <div class="mc-desc">สุ่มโจทย์ให้ทำ กด Submit เพื่อดูเฉลยทันที ข้อที่มีหลายคำตอบต้องเลือกให้ครบ ไม่จำกัดเวลา</div>
-      <span class="mc-badge badge-p">505 ข้อ · ไม่จำกัดเวลา · มีเฉลย</span>
+      <div class="mc-desc">ซ้อมๆ</div>
+      <span class="mc-tag tag-p">· ไม่จำกัดเวลา</span>
     </div>
     <div class="mode-card exam" onclick="startMode('exam')">
-      <div class="mc-icon">🎯</div>
+      <div class="mc-icon e">🎯</div>
       <div class="mc-title">Exam Mode</div>
-      <div class="mc-desc">จำลองข้อสอบจริง 125 ข้อ จับเวลา 4 ชั่วโมง ไม่แสดงเฉลยระหว่างทำ เกณฑ์ผ่าน 70%</div>
-      <span class="mc-badge badge-e">125 ข้อ · 4 ชั่วโมง · 70% ผ่าน</span>
+      <div class="mc-desc">จำลองข้อสอบจริง 125 ข้อ จับเวลา 4 ชั่วโมง</div>
+      <span class="mc-tag tag-e">125 ข้อ · 4 ชั่วโมง · 70%</span>
     </div>
   </div>
 </div>
 
-<!-- ════════════════ QUIZ ════════════════ -->
+<!-- ════ PRACTICE DIALOG ════ -->
+<div class="modal-overlay" id="practice-modal">
+  <div class="modal-box">
+    <div class="modal-title">📚 Practice Mode</div>
+    <div class="modal-sub">เลือกจำนวนข้อที่ต้องการทำ</div>
+    <div class="preset-grid">
+      <button class="preset-btn" onclick="setCount(10)">10</button>
+      <button class="preset-btn" onclick="setCount(25)">25</button>
+      <button class="preset-btn" onclick="setCount(50)">50</button>
+      <button class="preset-btn" onclick="setCount(100)">100</button>
+      <button class="preset-btn" onclick="setCount(505)">ทั้งหมด</button>
+    </div>
+    <div class="custom-row">
+      <span class="custom-label">กำหนดเอง</span>
+      <input class="custom-input" id="count-input" type="number" min="1" max="505" value="50" oninput="clearActive()"/>
+      <span class="custom-range">ข้อ</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closePracticeDialog()">ยกเลิก</button>
+      <button class="btn-confirm" onclick="confirmPractice()">เริ่มเลย →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ API KEY MODAL ════ -->
+<div class="modal-overlay" id="apikey-modal">
+  <div class="modal-box">
+    <div class="modal-title">🔑 Anthropic API Key</div>
+    <div class="modal-sub">ต้องใช้ API Key เพื่อแปลภาษา Key จะเก็บในหน่วยความจำเท่านั้น</div>
+    <input class="ak-input" id="ak-input" type="password" placeholder="sk-ant-api03-..." spellcheck="false"/>
+    <div class="ak-note">
+      รับ API Key ได้ที่ <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeApiModal()">ยกเลิก</button>
+      <button class="btn-confirm green" onclick="saveApiKey()">บันทึกและแปล</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ QUIZ ════ -->
 <div id="quiz">
   <div class="topbar">
-    <div class="tb-left">
-      <button class="back-btn" onclick="goHome()">← กลับ</button>
-      <span class="mode-pill" id="mode-pill"></span>
-    </div>
-    <div class="tb-center">
-      <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
-      <div class="prog-labels">
-        <span id="q-counter">Q 1 / 97</span>
+    <button class="tb-back" onclick="goHome()">←</button>
+    <span class="mode-chip" id="mode-chip">Practice</span>
+    <div class="tb-progress">
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="prog-meta">
+        <span id="q-counter">Q 1 / 50</span>
         <span id="pct-label">0%</span>
       </div>
     </div>
-    <div class="tb-right">
-      <div class="timer" id="timer" style="display:none;">⏱ <span id="timer-disp">4:00:00</span></div>
-      <div class="score-pills">
-        <div class="spill spill-c">✓ <span id="sc-c">0</span></div>
-        <div class="spill spill-w">✗ <span id="sc-w">0</span></div>
-      </div>
+    <div class="timer-chip" id="timer" style="display:none;">⏱ <span id="timer-disp">4:00:00</span></div>
+    <div class="score-row" id="score-row">
+      <div class="score-chip sc-c">✓ <span id="sc-c">0</span></div>
+      <div class="score-chip sc-w">✗ <span id="sc-w">0</span></div>
     </div>
   </div>
 
-  <div class="quiz-main">
-    <div class="card">
-      <div class="q-head">
-        <span class="q-num" id="q-num">Q 001</span>
-        <span class="multi-tag" id="multi-tag" style="display:none;">🔢 เลือกหลายคำตอบ</span>
-        <button class="btn-translate" id="btn-translate" onclick="toggleTranslate()">🌐 แปลภาษา</button>
+  <div class="quiz-body">
+    <div class="q-card">
+      <div class="q-card-header">
+        <span class="q-label" id="q-num">QUESTION 001</span>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <span class="multi-pill" id="multi-pill" style="display:none;">เลือกหลายคำตอบ</span>
+          <button class="translate-btn" id="btn-translate" onclick="toggleTranslate()">🌐 แปล</button>
+        </div>
       </div>
-      <div class="q-body">
+      <div class="q-card-body">
         <img class="q-img" id="q-img" style="display:none;" src="" alt=""/>
         <div class="q-text" id="q-text"></div>
-        <div class="translated-box" id="translated-box">
-          <span class="th-label">🇹🇭 คำแปลภาษาไทย</span>
+        <div class="th-box" id="th-box">
+          <span class="th-eyebrow">🇹🇭 คำแปลภาษาไทย</span>
           <div class="th-q" id="th-q"></div>
           <div id="th-opts"></div>
         </div>
         <div class="opts" id="opts"></div>
         <div class="feedback" id="feedback"></div>
       </div>
-      <div class="q-actions" id="q-actions"></div>
+      <div class="q-card-footer" id="q-footer"></div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════ FINAL ════════════════ -->
+<!-- ════ FINAL ════ -->
 <div id="final">
-  <div class="result-ring" id="result-ring">
-    <div class="ring-pct" id="ring-pct">0%</div>
-    <div class="ring-lbl">คะแนน</div>
+  <div class="result-badge" id="result-badge">
+    <div class="rb-pct" id="rb-pct">0%</div>
+    <div class="rb-lbl">Score</div>
   </div>
   <div>
     <div class="result-title" id="result-title"></div>
     <div class="result-sub" id="result-sub"></div>
   </div>
-  <div class="r-stats">
-    <div class="rstat"><div class="big c-green" id="f-c">0</div><div class="sm">ตอบถูก</div></div>
-    <div class="rstat"><div class="big c-red"   id="f-w">0</div><div class="sm">ตอบผิด</div></div>
-    <div class="rstat"><div class="big c-yellow" id="f-s">0</div><div class="sm">ข้าม / ไม่ตอบ</div></div>
-    <div class="rstat" id="f-time-stat" style="display:none;">
-      <div class="big c-accent" id="f-time">—</div><div class="sm">เวลาที่ใช้</div>
-    </div>
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val sv-c" id="f-c">0</div><div class="stat-lbl">ตอบถูก</div></div>
+    <div class="stat-box"><div class="stat-val sv-w" id="f-w">0</div><div class="stat-lbl">ตอบผิด</div></div>
+    <div class="stat-box"><div class="stat-val sv-s" id="f-s">0</div><div class="stat-lbl">ข้าม</div></div>
+    <div class="stat-box" id="f-time-box" style="display:none;"><div class="stat-val sv-t" id="f-time">—</div><div class="stat-lbl">เวลาที่ใช้</div></div>
   </div>
   <div class="pass-bar-wrap" id="pass-bar-wrap" style="display:none;">
-    <div class="pass-bar-labels"><span>คะแนนของคุณ</span><span>เกณฑ์ผ่าน 70%</span></div>
-    <div class="pass-bar-track">
-      <div class="pass-bar-fill" id="pass-bar-fill"></div>
-      <div class="pass-bar-marker"></div>
+    <div class="pb-labels"><span>คะแนน</span><span>เกณฑ์ผ่าน 70%</span></div>
+    <div class="pb-track">
+      <div class="pb-fill" id="pb-fill"></div>
+      <div class="pb-marker"></div>
     </div>
   </div>
-  <div class="r-actions">
-    <button class="btn-home2" onclick="goHome()">🏠 หน้าหลัก</button>
-    <button class="btn-retry" id="btn-retry" onclick="retryMode()">🔄 ทำซ้ำโหมดนี้</button>
+  <div class="result-actions">
+    <button class="btn-home-r" onclick="goHome()">หน้าหลัก</button>
+    <button class="btn-retry-r" onclick="retryMode()">ทำซ้ำ</button>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-//  QUESTION BANK
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════
+function toggleTheme(){
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme', isDark?'light':'dark');
+  document.getElementById('theme-btn').textContent = isDark?'🌙':'☀️';
+}
+
+// ══════════════════════════════════════
+//  QUESTIONS
+// ══════════════════════════════════════
 const questions = [
   {q:"What is the proper response for a NULL scan if the port is open?",opts:{A:"SYN", B:"ACK", C:"FIN", D:"PSH", E:"RST", F:"No response"},ans:["F"]},
   {q:"The following is an entry captured by a network IDS. You are assigned the task of analyzing this entry. You notice the value 0x90, which is the most common NOOP instruction for the Intel processor. You figure that the attacker is attempting a buffer overflow attack. You also notice \"/bin/sh\" in the ASCII part of the output. As an analyst what would you conclude about the attack?",opts:{A:"The buffer overflow attack has been neutralized by the IDS", B:"The attacker is creating a directory on the compromised machine", C:"The attacker is attempting a buffer overflow attack and has succeeded", D:"The attacker is attempting an exploit that launches a command-line shell"},ans:["D"]},
@@ -482,7 +668,6 @@ const questions = [
   {q:"Why should the security analyst disable/remove unnecessary ISAPI filters?",opts:{A:"To defend against social engineering attacks", B:"To defend against webserver attacks", C:"To defend against jailbreaking", D:"To defend against wireless attacks"},ans:["B"]},
   {q:"Which of the following incident handling process phases is responsible for defining rules, collaborating human workforce, creating a back-up plan, and testing the plans for an organization?",opts:{A:"Preparation phase", B:"Containment phase", C:"Identification phase", D:"Recovery phase"},ans:["A"]},
   {q:"Which of the following tools are used for enumeration? (Choose three.)",opts:{A:"SolarWinds", B:"USER2SID", C:"Cheops", D:"SID2USER", E:"DumpSec"},ans:["B", "D", "E"]},
-  {q:"Study the following log extract and identify the attack.",opts:{A:"Hexcode Attack", B:"Cross Site Scripting", C:"Multiple Domain Traversal Attack", D:"Unicode Directory Traversal Attack"},ans:["D"]},
   {q:"You just set up a security system in your network. In what kind of system would you find the following string of characters used as a rule within its configuration? alert tcp any any -> 192.168.100.0/24 21 (msg: ““FTP on the network!””;)",opts:{A:"A firewall IPTable", B:"FTP Server rule", C:"A Router IPTable", D:"An Intrusion Detection System"},ans:["D"]},
   {q:"Which of the following is a component of a risk assessment?",opts:{A:"Administrative safeguards", B:"Physical security", C:"DMZ", D:"Logical interface"},ans:["A"]},
   {q:"Which of the following statements about a zone transfer is correct? (Choose three.)",opts:{A:"A zone transfer is accomplished with the DNS", B:"A zone transfer is accomplished with the nslookup service", C:"A zone transfer passes all zone information that a DNS server maintains", D:"A zone transfer passes all zone information that a nslookup server maintains", E:"A zone transfer can be prevented by blocking all inbound TCP port 53 connections", F:"Zone transfers cannot occur on the Internet"},ans:["A", "C", "E"]},
@@ -946,585 +1131,331 @@ const questions = [
   {q:"A \"Server-Side Includes\" attack refers to the exploitation of a web application by injecting scripts in HTML pages or executing arbitrary code remotely. Which web-page file type, if it exists on the web server, is a strong indication that the server is vulnerable to this kind of attack?",opts:{A:".stm", B:".html", C:".rss", D:".cms"},ans:["A"]},
 ];
 
-// ══════════════════════════════════════════════════
+
+// ══════════════════════════════════════
 //  STATE
-// ══════════════════════════════════════════════════
-let mode       = 'practice'; // 'practice' | 'exam'
-let examOrder  = [];         // indices used in current session
-let current    = 0;          // index into examOrder
-let correct    = 0;
-let wrong      = 0;
-let skipped    = 0;
-let answered   = false;
-let selected   = new Set();  // currently selected keys
-let timerSec   = 0;
-let timerID    = null;
-let startTime  = null;
+// ══════════════════════════════════════
+let mode='practice', examOrder=[], current=0;
+let correct=0, wrong=0, skipped=0;
+let answered=false, selected=new Set();
+let timerSec=0, timerID=null, startTime=null;
+const EXAM_COUNT=125, EXAM_DURATION=4*60*60, PASS_PCT=70;
 
-const EXAM_COUNT    = 125;
-const EXAM_DURATION = 4 * 60 * 60; // 4 hrs in seconds
-const PASS_PCT      = 70;
-
-// ── helpers ──
-function shuffle(arr){
-  const a=[...arr];
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a;
-}
+// ══════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function pad2(n){return String(n).padStart(2,'0');}
-function fmtTime(s){
-  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
-  return h>0?`${h}:${pad2(m)}:${pad2(sec)}`:`${m}:${pad2(sec)}`;
-}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h?`${h}:${pad2(m)}:${pad2(sc)}`:`${m}:${pad2(sc)}`;}
 function elapsed(){return Math.floor((Date.now()-startTime)/1000);}
+function arrEq(a,b){return a.length===b.length&&a.every((v,i)=>v===b[i]);}
 
-// ══════════════════════════════════════════════════
-//  SCREEN HELPERS
-// ══════════════════════════════════════════════════
-function show(id){
+function showScreen(id){
   ['home','quiz','final'].forEach(s=>{
     const el=document.getElementById(s);
-    el.style.display=(s===id)?(s==='home'||s==='final'?'flex':'flex'):'none';
+    el.style.display='none';
   });
-  if(id==='quiz') document.getElementById('quiz').style.flexDirection='column';
-  if(id==='final') document.getElementById('final').style.flexDirection='column';
+  const el=document.getElementById(id);
+  el.style.display='flex';
+  el.style.flexDirection='column';
 }
-function goHome(){
-  stopTimer();
-  show('home');
-}
+function goHome(){stopTimer();showScreen('home');}
 
-// ══════════════════════════════════════════════════
-//  START MODE
-// ══════════════════════════════════════════════════
-function openPracticeDialog(){
-  document.getElementById('practice-dialog').style.display='flex';
-  clearPresetActive();
-}
-function closePracticeDialog(){
-  document.getElementById('practice-dialog').style.display='none';
-}
-function setPracticeCount(n){
-  document.getElementById('pd-custom-input').value=n;
-  document.querySelectorAll('.pd-preset').forEach(el=>{
-    el.classList.toggle('active', el.textContent.startsWith(n+' ') || (n===505 && el.textContent.includes('505')));
+// ══════════════════════════════════════
+//  PRACTICE DIALOG
+// ══════════════════════════════════════
+function openPracticeDialog(){document.getElementById('practice-modal').style.display='flex';}
+function closePracticeDialog(){document.getElementById('practice-modal').style.display='none';}
+function setCount(n){
+  document.getElementById('count-input').value=n;
+  document.querySelectorAll('.preset-btn').forEach(b=>{
+    b.classList.toggle('active', parseInt(b.textContent)===n || (n===505&&b.textContent.includes('505')));
   });
 }
-function clearPresetActive(){
-  document.querySelectorAll('.pd-preset').forEach(el=>el.classList.remove('active'));
-}
+function clearActive(){document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));}
 function confirmPractice(){
-  let n = parseInt(document.getElementById('pd-custom-input').value)||50;
-  n = Math.max(1, Math.min(505, n));
+  let n=parseInt(document.getElementById('count-input').value)||50;
+  n=Math.max(1,Math.min(505,n));
   closePracticeDialog();
-  startMode('practice', n);
+  startMode('practice',n);
 }
 
-function startMode(m, practiceCount){
-  mode    = m;
-  correct = 0;
-  wrong   = 0;
-  skipped = 0;
-  answered= false;
-  selected= new Set();
-  current = 0;
-  startTime = Date.now();
-
-  const allIdx = shuffle([...Array(questions.length).keys()]);
-
+// ══════════════════════════════════════
+//  START / TIMER
+// ══════════════════════════════════════
+function startMode(m,practiceCount){
+  mode=m; correct=0; wrong=0; skipped=0;
+  answered=false; selected=new Set(); current=0;
+  startTime=Date.now();
+  const allIdx=shuffle([...Array(questions.length).keys()]);
   if(mode==='exam'){
-    const pool = [];
-    while(pool.length < EXAM_COUNT){
-      pool.push(...shuffle([...Array(questions.length).keys()]));
-    }
-    examOrder = pool.slice(0, EXAM_COUNT);
+    const pool=[];
+    while(pool.length<EXAM_COUNT) pool.push(...shuffle([...Array(questions.length).keys()]));
+    examOrder=pool.slice(0,EXAM_COUNT);
   } else {
-    const count = practiceCount || questions.length;
-    examOrder = allIdx.slice(0, count);
+    examOrder=allIdx.slice(0,practiceCount||questions.length);
   }
-
-  // Timer
   stopTimer();
+  const timerEl=document.getElementById('timer');
   if(mode==='exam'){
-    timerSec = EXAM_DURATION;
-    document.getElementById('timer').style.display='flex';
-    updateTimerDisplay();
-    timerID = setInterval(()=>{
-      timerSec--;
-      updateTimerDisplay();
-      if(timerSec<=0){ clearInterval(timerID); finishQuiz(true); }
-    },1000);
-  } else {
-    document.getElementById('timer').style.display='none';
-  }
-
-  // Pill
-  const pill = document.getElementById('mode-pill');
-  pill.className = 'mode-pill ' + (mode==='practice'?'pill-p':'pill-e');
-  pill.textContent = mode==='practice'?'Practice Mode':'Exam Mode';
-
-  show('quiz');
+    timerSec=EXAM_DURATION;
+    timerEl.style.display='flex';
+    updateTimer();
+    timerID=setInterval(()=>{timerSec--;updateTimer();if(timerSec<=0){clearInterval(timerID);finishQuiz(true);}},1000);
+  } else { timerEl.style.display='none'; }
+  const chip=document.getElementById('mode-chip');
+  chip.className='mode-chip '+(mode==='practice'?'chip-p':'chip-e');
+  chip.textContent=mode==='practice'?'Practice':'Exam';
+  document.getElementById('score-row').style.display=mode==='exam'?'none':'flex';
+  showScreen('quiz');
   renderQ();
 }
-
-function stopTimer(){
-  if(timerID){ clearInterval(timerID); timerID=null; }
+function stopTimer(){if(timerID){clearInterval(timerID);timerID=null;}}
+function retryMode(){if(mode==='practice') startMode('practice',examOrder.length); else startMode('exam');}
+function updateTimer(){
+  const el=document.getElementById('timer-disp');
+  const box=document.getElementById('timer');
+  el.textContent=fmtTime(timerSec);
+  box.className='timer-chip';
+  if(timerSec<=600) box.classList.add('danger');
+  else if(timerSec<=1800) box.classList.add('warn');
 }
 
-let lastPracticeCount=505;
-function retryMode(){ if(mode==="practice") startMode('practice', examOrder.length); else startMode(mode); }
-
-// ══════════════════════════════════════════════════
-//  TIMER
-// ══════════════════════════════════════════════════
-function updateTimerDisplay(){
-  const el  = document.getElementById('timer-disp');
-  const box = document.getElementById('timer');
-  el.textContent = fmtTime(timerSec);
-  box.className  = 'timer';
-  if(timerSec <= 600)      box.classList.add('danger');
-  else if(timerSec<=1800)  box.classList.add('warn');
-}
-
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════
 //  RENDER QUESTION
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════
 function renderQ(){
-  answered = false;
-  selected = new Set();
+  answered=false; selected=new Set();
+  isTranslated=false;
+  document.getElementById('th-box').style.display='none';
+  const tBtn=document.getElementById('btn-translate');
+  tBtn.className='translate-btn'; tBtn.textContent='🌐 แปล'; tBtn.onclick=toggleTranslate;
 
-  const total = examOrder.length;
-  const q     = questions[examOrder[current]];
-  const isMulti = q.ans.length > 1;
+  const total=examOrder.length;
+  const q=questions[examOrder[current]];
+  const isMulti=q.ans.length>1;
+  const pct=Math.round((current/total)*100);
 
-  // progress
-  const pct = Math.round((current / total) * 100);
-  document.getElementById('prog-fill').style.width = pct+'%';
-  document.getElementById('q-counter').textContent = `Q ${current+1} / ${total}`;
-  document.getElementById('pct-label').textContent = pct+'%';
-  document.getElementById('q-num').textContent     = 'Q ' + String(current+1).padStart(3,'0');
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('q-counter').textContent=`Q ${current+1} / ${total}`;
+  document.getElementById('pct-label').textContent=pct+'%';
+  document.getElementById('q-num').textContent=`QUESTION ${String(current+1).padStart(3,'0')}`;
+  document.getElementById('multi-pill').style.display=isMulti?'inline-flex':'none';
 
-  // multi badge
-  const mt = document.getElementById('multi-tag');
-  mt.style.display = isMulti ? 'inline-block':'none';
+  const img=document.getElementById('q-img');
+  if(q.img){img.src=q.img;img.style.display='block';}
+  else{img.style.display='none';img.src='';}
 
-  // image
-  const img = document.getElementById('q-img');
-  if(q.img){ img.src=q.img; img.style.display='block'; }
-  else { img.style.display='none'; img.src=''; }
+  document.getElementById('q-text').textContent=q.q;
 
-  // question text
-  document.getElementById('q-text').textContent = q.q;
-
-  // options
-  const optsEl = document.getElementById('opts');
-  optsEl.innerHTML = '';
+  const optsEl=document.getElementById('opts');
+  optsEl.innerHTML='';
   Object.entries(q.opts).forEach(([key,val])=>{
-    const d = document.createElement('div');
-    d.className='opt';
-    d.dataset.key=key;
+    const d=document.createElement('div');
+    d.className='opt'; d.dataset.key=key;
     d.innerHTML=`<span class="opt-key">${key}</span><span class="opt-text">${val}</span>`;
     d.addEventListener('click',()=>selectOpt(d,key,isMulti));
     optsEl.appendChild(d);
   });
 
-  // reset translation
-  isTranslated = false;
-  document.getElementById('translated-box').style.display='none';
-  const tBtn = document.getElementById('btn-translate');
-  tBtn.className='btn-translate'; tBtn.textContent='🌐 แปลภาษา'; tBtn.onclick=toggleTranslate;
-
-  // feedback reset
-  const fb = document.getElementById('feedback');
+  const fb=document.getElementById('feedback');
   fb.style.display='none'; fb.className='feedback'; fb.textContent='';
 
-  // score
   updateScore();
-
-  // actions
-  renderActions(false);
+  renderFooter(false);
 }
 
-// ══════════════════════════════════════════════════
-//  SELECT OPTION
-// ══════════════════════════════════════════════════
 function selectOpt(el,key,isMulti){
   if(answered) return;
   if(isMulti){
-    if(selected.has(key)){ selected.delete(key); el.classList.remove('sel'); }
-    else { selected.add(key); el.classList.add('sel'); }
+    if(selected.has(key)){selected.delete(key);el.classList.remove('sel');}
+    else{selected.add(key);el.classList.add('sel');}
   } else {
-    // single: deselect all first
     document.querySelectorAll('#opts .opt').forEach(o=>o.classList.remove('sel'));
-    selected = new Set([key]);
+    selected=new Set([key]);
     el.classList.add('sel');
   }
-  // enable submit if selection non-empty
-  const btn = document.getElementById('btn-sub');
-  if(btn) btn.disabled = selected.size===0;
-  renderActions(false);
+  renderFooter(false);
 }
 
-// ══════════════════════════════════════════════════
-//  RENDER ACTIONS
-// ══════════════════════════════════════════════════
-function renderActions(afterSubmit){
-  const el  = document.getElementById('q-actions');
-  const q   = questions[examOrder[current]];
-  const total = examOrder.length;
+function renderFooter(afterSubmit){
+  const el=document.getElementById('q-footer');
+  const q=questions[examOrder[current]];
+  const total=examOrder.length;
   el.innerHTML='';
-
   if(!afterSubmit){
-    // hint text for multi
     if(q.ans.length>1){
-      const hint = document.createElement('span');
-      hint.className='hint-text';
-      hint.textContent=`เลือก ${q.ans.length} คำตอบ (เลือกแล้ว ${selected.size})`;
-      el.appendChild(hint);
+      const h=document.createElement('span');
+      h.className='hint-label';
+      h.textContent=`เลือก ${q.ans.length} คำตอบ (เลือกแล้ว ${selected.size})`;
+      el.appendChild(h);
     }
-
-    // Skip (practice only)
     if(mode==='practice'){
       const sk=document.createElement('button');
       sk.className='btn btn-skip'; sk.textContent='ข้าม';
       sk.onclick=skipQ; el.appendChild(sk);
     }
-
-    // Submit
     const sub=document.createElement('button');
-    sub.className='btn btn-sub'; sub.id='btn-sub';
-    sub.textContent='Submit';
-    sub.disabled = selected.size===0;
-
-    // Exam: for multi-answer, require exact count before enabling
-    if(q.ans.length>1 && selected.size < q.ans.length) sub.disabled=true;
-
+    sub.className='btn btn-sub'; sub.textContent='Submit';
+    sub.disabled=selected.size===0||(q.ans.length>1&&selected.size<q.ans.length);
     sub.onclick=submitQ; el.appendChild(sub);
-
   } else {
-    // After submit: show Next or Finish
-    const isLast = (current >= total-1);
+    const isLast=current>=total-1;
     if(!isLast){
       const nx=document.createElement('button');
-      nx.className='btn btn-next'; nx.textContent='Next →';
+      nx.className='btn btn-next'; nx.textContent='ถัดไป →';
       nx.onclick=nextQ; el.appendChild(nx);
     } else {
       const fn=document.createElement('button');
-      fn.className='btn btn-finish'; fn.textContent='🏁 ดูผลสรุป';
+      fn.className='btn btn-finish'; fn.textContent='ดูผลสรุป →';
       fn.onclick=()=>finishQuiz(false); el.appendChild(fn);
     }
   }
 }
 
-// ══════════════════════════════════════════════════
-//  SUBMIT
-// ══════════════════════════════════════════════════
 function submitQ(){
   if(answered) return;
   answered=true;
-
-  const q     = questions[examOrder[current]];
-  const isOk  = arrEq([...selected].sort(), [...q.ans].sort());
-  const fb    = document.getElementById('feedback');
-
+  const q=questions[examOrder[current]];
+  const isOk=arrEq([...selected].sort(),[...q.ans].sort());
   if(isOk) correct++; else wrong++;
   updateScore();
-
-  // Practice: show feedback + highlight
   if(mode==='practice'){
     document.querySelectorAll('#opts .opt').forEach(o=>{
-      const k=o.dataset.key;
-      o.classList.add('locked');
-      if(q.ans.includes(k)){
-        // correct answer
-        if(selected.has(k)) o.className='opt locked ok';
-        else                 o.className='opt locked hint'; // missed
-      } else if(selected.has(k)){
-        o.className='opt locked bad'; // wrong pick
-      }
+      const k=o.dataset.key; o.classList.add('locked');
+      if(q.ans.includes(k)) o.className=selected.has(k)?'opt locked ok':'opt locked hint';
+      else if(selected.has(k)) o.className='opt locked bad';
     });
+    const fb=document.getElementById('feedback');
     fb.style.display='block';
-    if(isOk){
-      fb.className='feedback fb-ok';
-      fb.innerHTML='✅ <strong>ถูกต้อง!</strong> คำตอบที่ถูกคือ: '+q.ans.join(', ');
-    } else {
-      fb.className='feedback fb-bad';
-      fb.innerHTML='❌ <strong>ผิด!</strong> คำตอบที่ถูกต้องคือ: <strong>'+q.ans.join(', ')+'</strong>';
-    }
+    if(isOk){fb.className='feedback fb-ok';fb.innerHTML='✅ ถูกต้อง! คำตอบ: '+q.ans.join(', ');}
+    else{fb.className='feedback fb-bad';fb.innerHTML='❌ ผิด! คำตอบที่ถูกต้อง: <strong>'+q.ans.join(', ')+'</strong>';}
   } else {
-    // Exam: no feedback, just lock
     document.querySelectorAll('#opts .opt').forEach(o=>o.classList.add('locked'));
   }
-
-  renderActions(true);
+  renderFooter(true);
 }
 
-function arrEq(a,b){ return a.length===b.length && a.every((v,i)=>v===b[i]); }
-
-// ══════════════════════════════════════════════════
-//  SKIP (practice only)
-// ══════════════════════════════════════════════════
-function skipQ(){
-  skipped++;
-  nextQ();
-}
-
-// ══════════════════════════════════════════════════
-//  NEXT
-// ══════════════════════════════════════════════════
-function nextQ(){
-  const total=examOrder.length;
-  if(current < total-1){
-    current++;
-    renderQ();
-  } else {
-    finishQuiz(false);
-  }
-}
-
-// ══════════════════════════════════════════════════
-//  UPDATE SCORE
-// ══════════════════════════════════════════════════
+function skipQ(){skipped++;nextQ();}
+function nextQ(){const total=examOrder.length;if(current<total-1){current++;renderQ();}else finishQuiz(false);}
 function updateScore(){
   document.getElementById('sc-c').textContent=correct;
   document.getElementById('sc-w').textContent=wrong;
-  document.querySelector('.score-pills').style.display=mode==='exam'?'none':'flex';
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════
 //  FINISH
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════
 function finishQuiz(timeUp){
   stopTimer();
-  const total      = examOrder.length;
-  const attempted  = correct+wrong;
-  const unanswered = total - attempted - skipped; // for exam (no skip btn) this = remaining
-  const totalSkip  = skipped + (mode==='exam' ? Math.max(0, total-current-1-(answered?0:1)) : 0);
-  const pct        = attempted===0 ? 0 : Math.round((correct/attempted)*100);
-  const pctTotal   = Math.round((correct/total)*100);
-
-  // ring
-  const ring=document.getElementById('result-ring');
-  document.getElementById('ring-pct').textContent=pctTotal+'%';
-  ring.className = 'result-ring ' + (mode==='exam'?(pctTotal>=PASS_PCT?'ring-pass':'ring-fail'):'ring-pass');
-
-  // title & sub
-  let title='', sub='';
+  const total=examOrder.length;
+  const pctTotal=Math.round((correct/total)*100);
+  const badge=document.getElementById('result-badge');
+  document.getElementById('rb-pct').textContent=pctTotal+'%';
+  if(mode==='exam') badge.className='result-badge '+(pctTotal>=PASS_PCT?'rb-pass':'rb-fail');
+  else badge.className='result-badge rb-practice';
+  let title='',sub='';
   if(mode==='exam'){
-    if(pctTotal>=PASS_PCT){
-      title='🎉 ผ่านการสอบ!'; sub=`คุณทำได้ ${correct}/${total} ข้อ (${pctTotal}%) — เกณฑ์ผ่าน 70%`;
-    } else {
-      title='😔 ไม่ผ่าน'; sub=`คุณทำได้ ${correct}/${total} ข้อ (${pctTotal}%) — ต้องการ ${Math.ceil(total*0.7)} ข้อ`;
-    }
-    if(timeUp) sub = '⏰ หมดเวลา! ' + sub;
+    if(pctTotal>=PASS_PCT){title='ผ่านการสอบ 🎉';sub=`${correct}/${total} ข้อ (${pctTotal}%) — เกณฑ์ผ่าน 70%`;}
+    else{title='ยังไม่ผ่าน 😔';sub=`${correct}/${total} ข้อ (${pctTotal}%) — ต้องการ ${Math.ceil(total*0.7)} ข้อ`;}
+    if(timeUp) sub='⏰ หมดเวลา! '+sub;
   } else {
-    if(pctTotal>=90)      { title='🏆 ยอดเยี่ยม! Expert'; sub='คะแนนระดับ Expert ≥ 90%'; }
-    else if(pctTotal>=70) { title='✅ ผ่าน! Good Job';    sub='ผ่านเกณฑ์ 70% แล้ว'; }
-    else if(pctTotal>=50) { title='📖 ยังพอไหว';          sub='ลองทำซ้ำเพื่อเพิ่มคะแนน'; }
-    else                  { title='💡 ต้องทบทวนเพิ่ม';   sub='ทำซ้ำหลายๆ รอบเพื่อจดจำ'; }
+    if(pctTotal>=90) title='ยอดเยี่ยม! 🏆';
+    else if(pctTotal>=70) title='ผ่าน! ✅';
+    else if(pctTotal>=50) title='พอไหว 📖';
+    else title='ต้องทบทวนเพิ่ม 💡';
+    sub=`${correct}/${total} ข้อ — ${pctTotal}%`;
   }
   document.getElementById('result-title').textContent=title;
   document.getElementById('result-sub').textContent=sub;
-
-  // stats
   document.getElementById('f-c').textContent=correct;
   document.getElementById('f-w').textContent=wrong;
-  document.getElementById('f-s').textContent= mode==='exam'
-    ? total-correct-wrong
-    : skipped;
-
-  // time
-  const timeStat=document.getElementById('f-time-stat');
-  if(mode==='exam'){
-    timeStat.style.display='block';
-    document.getElementById('f-time').textContent=fmtTime(elapsed());
-  } else { timeStat.style.display='none'; }
-
-  // pass bar (exam only)
+  document.getElementById('f-s').textContent=mode==='exam'?total-correct-wrong:skipped;
+  const tb=document.getElementById('f-time-box');
+  if(mode==='exam'){tb.style.display='block';document.getElementById('f-time').textContent=fmtTime(elapsed());}
+  else tb.style.display='none';
   const pbw=document.getElementById('pass-bar-wrap');
   if(mode==='exam'){
     pbw.style.display='block';
-    const fill=document.getElementById('pass-bar-fill');
+    const fill=document.getElementById('pb-fill');
     fill.style.width='0%';
     fill.style.background=pctTotal>=PASS_PCT?'var(--green)':'var(--red)';
-    setTimeout(()=>{ fill.style.width=Math.min(pctTotal,100)+'%'; },100);
-  } else { pbw.style.display='none'; }
-
-  show('final');
+    setTimeout(()=>{fill.style.width=Math.min(pctTotal,100)+'%';},100);
+  } else pbw.style.display='none';
+  showScreen('final');
 }
 
-// init
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════
 //  TRANSLATE
-// ══════════════════════════════════════════════════
-let isTranslated = false;
-let translationCache = {}; // key: question index -> {q, opts}
+// ══════════════════════════════════════
+let isTranslated=false, translationCache={}, anthropicApiKey='', pendingIdx=null;
 
 function toggleTranslate(){
-  const box = document.getElementById('translated-box');
+  const box=document.getElementById('th-box');
   if(isTranslated){
-    isTranslated = false;
-    box.style.display='none';
-    document.getElementById('btn-translate').className='btn-translate';
-    document.getElementById('btn-translate').textContent='🌐 แปลภาษา';
-    return;
+    isTranslated=false; box.style.display='none';
+    const b=document.getElementById('btn-translate');
+    b.className='translate-btn'; b.textContent='🌐 แปล'; return;
   }
-  const idx = examOrder[current];
-  if(translationCache[idx]){
-    showTranslation(translationCache[idx]);
-    return;
-  }
+  const idx=examOrder[current];
+  if(translationCache[idx]){showTranslation(translationCache[idx]);return;}
   doTranslate(idx);
 }
-
-let anthropicApiKey = '';
-let pendingTranslateIdx = null;
-
-function openApiKeyModal(idx){
-  pendingTranslateIdx = idx;
-  document.getElementById('apikey-modal').style.display='flex';
-  setTimeout(()=>document.getElementById('ak-input').focus(), 100);
-}
-function closeApiKeyModal(){
+function openApiModal(idx){pendingIdx=idx;document.getElementById('apikey-modal').style.display='flex';setTimeout(()=>document.getElementById('ak-input').focus(),100);}
+function closeApiModal(){
   document.getElementById('apikey-modal').style.display='none';
-  // reset translate button if cancelled without saving
-  if(!anthropicApiKey){
-    const btn = document.getElementById('btn-translate');
-    if(btn){ btn.className='btn-translate'; btn.textContent='🌐 แปลภาษา'; btn.onclick=toggleTranslate; }
-  }
+  if(!anthropicApiKey){const b=document.getElementById('btn-translate');if(b){b.className='translate-btn';b.textContent='🌐 แปล';b.onclick=toggleTranslate;}}
 }
 function saveApiKey(){
-  const val = document.getElementById('ak-input').value.trim();
-  if(!val){ document.getElementById('ak-input').style.borderColor='var(--red)'; return; }
-  anthropicApiKey = val;
+  const v=document.getElementById('ak-input').value.trim();
+  if(!v){document.getElementById('ak-input').style.borderColor='var(--red)';return;}
+  anthropicApiKey=v;
   document.getElementById('apikey-modal').style.display='none';
-  if(pendingTranslateIdx !== null){
-    doTranslate(pendingTranslateIdx);
-    pendingTranslateIdx = null;
-  }
+  if(pendingIdx!==null){doTranslate(pendingIdx);pendingIdx=null;}
 }
-
 async function doTranslate(idx){
-  // If no API key, ask for it first
-  if(!anthropicApiKey){
-    openApiKeyModal(idx);
-    return;
-  }
-
-  const q   = questions[idx];
-  const btn = document.getElementById('btn-translate');
-  btn.className='btn-translate loading';
-  btn.textContent='⏳ กำลังแปล...';
-  btn.onclick=null;
-
-  const optsText = Object.entries(q.opts).map(([k,v])=>`${k}. ${v}`).join('\n');
-  const prompt = `Translate the following exam question and answer options to Thai. Keep all technical terms, tool names, protocols, command names, and option letters (A B C D etc.) in English. Respond with JSON only, no other text:
-{
-  "q": "Thai translation of question",
-  "opts": {"A":"Thai translation","B":"Thai translation",...}
-}
-
-Question: ${q.q}
-
-Options:
-${optsText}`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+  if(!anthropicApiKey){openApiModal(idx);return;}
+  const q=questions[idx];
+  const btn=document.getElementById('btn-translate');
+  btn.className='translate-btn loading'; btn.textContent='⏳ กำลังแปล...'; btn.onclick=null;
+  const optsText=Object.entries(q.opts).map(([k,v])=>`${k}. ${v}`).join('\n');
+  const prompt=`Translate the following exam question and options to Thai. Keep technical terms, tool names, protocols, commands, and option letters in English. Reply with JSON only:\n{"q":"Thai question","opts":{"A":"Thai","B":"Thai",...}}\n\nQuestion: ${q.q}\n\nOptions:\n${optsText}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
-        max_tokens:1000,
-        messages:[{role:'user',content:prompt}]
-      })
+      headers:{'Content-Type':'application/json','x-api-key':anthropicApiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,messages:[{role:'user',content:prompt}]})
     });
-    const data = await res.json();
-    if(data.error){
-      throw new Error(data.error.message || 'API error');
-    }
-    const text = data.content.map(i=>i.text||'').join('');
-    const clean = text.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(clean);
-    translationCache[idx] = parsed;
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const text=data.content.map(i=>i.text||'').join('');
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    translationCache[idx]=parsed;
     showTranslation(parsed);
   } catch(e){
-    const btn2 = document.getElementById('btn-translate');
-    if(btn2){ 
-      btn2.className='btn-translate'; 
-      btn2.textContent='❌ ลองใหม่'; 
-      btn2.onclick=toggleTranslate;
-    }
+    const b=document.getElementById('btn-translate');
+    if(b){b.className='translate-btn';b.textContent='❌ ลองใหม่';b.onclick=toggleTranslate;}
   }
 }
-
 function showTranslation(t){
-  isTranslated = true;
-  const box  = document.getElementById('translated-box');
-  const thQ  = document.getElementById('th-q');
-  const thOs = document.getElementById('th-opts');
-  const btn  = document.getElementById('btn-translate');
-
-  thQ.textContent = t.q;
-  thOs.innerHTML  = '';
+  isTranslated=true;
+  const box=document.getElementById('th-box');
+  document.getElementById('th-q').textContent=t.q;
+  const thOs=document.getElementById('th-opts');
+  thOs.innerHTML='';
   Object.entries(t.opts).forEach(([k,v])=>{
-    const row = document.createElement('div');
+    const row=document.createElement('div');
     row.className='th-opt';
     row.innerHTML=`<span class="th-key">${k}.</span><span>${v}</span>`;
     thOs.appendChild(row);
   });
   box.style.display='block';
-  btn.className='btn-translate active';
-  btn.textContent='🌐 ซ่อนคำแปล';
-  btn.onclick=toggleTranslate;
+  const btn=document.getElementById('btn-translate');
+  btn.className='translate-btn on'; btn.textContent='🌐 ซ่อนแปล'; btn.onclick=toggleTranslate;
 }
 
-show('home');
+// init
+showScreen('home');
 </script>
-
-<!-- ════════════════ PRACTICE DIALOG ════════════════ -->
-<div id="practice-dialog" style="display:none;">
-  <div class="pd-box">
-    <div class="pd-title">📚 Practice Mode</div>
-    <div class="pd-sub">เลือกจำนวนข้อที่ต้องการทำ (สุ่มจาก 505 ข้อ)</div>
-    <div class="pd-presets">
-      <div class="pd-preset" onclick="setPracticeCount(10)">10 ข้อ</div>
-      <div class="pd-preset" onclick="setPracticeCount(25)">25 ข้อ</div>
-      <div class="pd-preset" onclick="setPracticeCount(50)">50 ข้อ</div>
-      <div class="pd-preset" onclick="setPracticeCount(100)">100 ข้อ</div>
-      <div class="pd-preset" onclick="setPracticeCount(505)">ทั้งหมด (505)</div>
-    </div>
-    <div class="pd-custom-row">
-      <span class="pd-custom-label">กำหนดเอง:</span>
-      <input class="pd-input" id="pd-custom-input" type="number" min="1" max="505" value="50" oninput="clearPresetActive()"/>
-      <span class="pd-range">ข้อ (1–505)</span>
-    </div>
-    <div class="pd-actions">
-      <button class="pd-cancel" onclick="closePracticeDialog()">ยกเลิก</button>
-      <button class="pd-start" onclick="confirmPractice()">เริ่มเลย →</button>
-    </div>
-  </div>
-</div>
-
-<!-- API KEY MODAL -->
-<div id="apikey-modal" style="display:none;">
-  <div class="ak-box">
-    <div class="ak-title">🔑 ใส่ Anthropic API Key</div>
-    <div class="ak-sub">ต้องใช้ API Key เพื่อแปลภาษา Key จะเก็บไว้ในหน่วยความจำเท่านั้น ไม่มีการบันทึก</div>
-    <input class="ak-input" id="ak-input" type="password" placeholder="sk-ant-api03-..." spellcheck="false"/>
-    <div class="ak-note">
-      รับ API Key ได้ที่ <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
-    </div>
-    <div class="ak-actions">
-      <button class="ak-cancel" onclick="closeApiKeyModal()">ยกเลิก</button>
-      <button class="ak-ok" onclick="saveApiKey()">บันทึกและแปล</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
