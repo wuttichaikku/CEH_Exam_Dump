@@ -127,6 +127,14 @@ input{font-family:'DM Mono',monospace;}
 }
 @media(max-width:520px){.mode-grid{grid-template-columns:1fr;max-width:340px;}}
 
+.mode-card.module{
+  grid-column: 1 / -1;
+}
+.mode-card.module::after{background:radial-gradient(circle at 80% 20%, rgba(22,163,74,.06), transparent 60%);}
+.mode-card.module:hover{border-color:var(--green-brd);}
+.mc-icon.m{background:var(--green-bg);}
+.tag-m{background:var(--green-bg);color:var(--green);border:1px solid var(--green-brd);}
+
 .mode-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius-lg);padding:1.8rem;
@@ -219,6 +227,33 @@ input{font-family:'DM Mono',monospace;}
 /* ══════════════════════════════════════
    API KEY MODAL
 ══════════════════════════════════════ */
+.module-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.75rem 1rem;border-radius:var(--radius-sm);
+  border:1.5px solid var(--border);background:var(--surface);
+  cursor:pointer;transition:all var(--transition);user-select:none;
+}
+.module-item:hover{border-color:var(--green-brd);background:var(--green-bg);}
+.module-item.active{border-color:var(--green);background:var(--green-bg);}
+.module-item-left{display:flex;align-items:center;gap:.7rem;}
+.module-badge{
+  font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;
+  padding:.18rem .55rem;border-radius:5px;
+  background:var(--green-bg);color:var(--green);border:1px solid var(--green-brd);
+  white-space:nowrap;flex-shrink:0;
+}
+.module-name{font-size:.9rem;font-weight:500;}
+.module-count{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text3);}
+.module-check{
+  width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;
+  transition:all var(--transition);flex-shrink:0;
+}
+.module-item.active .module-check{background:var(--green);border-color:var(--green);color:#fff;}
+
+/* chip for module mode in topbar */
+.chip-m{background:var(--green-bg);color:var(--green);border:1px solid var(--green-brd);}
+
 .ak-input{
   width:100%;background:var(--surface2);border:1px solid var(--border);
   color:var(--text);border-radius:var(--radius-sm);padding:.6rem .8rem;
@@ -485,7 +520,7 @@ input{font-family:'DM Mono',monospace;}
     <div class="mode-card practice" onclick="openPracticeDialog()">
       <div class="mc-icon p">📚</div>
       <div class="mc-title">Practice Mode</div>
-      <div class="mc-desc">ซ้อมๆ</div>
+      <div class="mc-desc">ซ้อมๆ สุ่มจากคลังข้อสอบทั้งหมด</div>
       <span class="mc-tag tag-p">· ไม่จำกัดเวลา</span>
     </div>
     <div class="mode-card exam" onclick="startMode('exam')">
@@ -493,6 +528,16 @@ input{font-family:'DM Mono',monospace;}
       <div class="mc-title">Exam Mode</div>
       <div class="mc-desc">จำลองข้อสอบจริง 125 ข้อ จับเวลา 4 ชั่วโมง</div>
       <span class="mc-tag tag-e">125 ข้อ · 4 ชั่วโมง · 70%</span>
+    </div>
+    <div class="mode-card module" onclick="startModulePractice()">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div class="mc-icon m" style="margin-bottom:0;flex-shrink:0;">📖</div>
+        <div>
+          <div class="mc-title">Module Practice</div>
+          <div class="mc-desc" style="margin-bottom:.6rem;">ข้อสอบวัดความรู้แต่ละ Module</div>
+          <span class="mc-tag tag-m">· M1–M20 ครบทุก Module · 25 ข้อต่อ Module</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -521,11 +566,24 @@ input{font-family:'DM Mono',monospace;}
   </div>
 </div>
 
+<!-- ════ MODULE SELECT DIALOG ════ -->
+<div class="modal-overlay" id="module-modal">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-title">📖 Module Practice</div>
+    <div class="modal-sub">เลือก Module ที่ต้องการฝึก</div>
+    <div id="module-list" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.4rem;max-height:320px;overflow-y:auto;padding-right:.3rem;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModuleDialog()">ยกเลิก</button>
+      <button class="btn-confirm green" id="module-start-btn" onclick="confirmModulePractice()">เริ่มเลย →</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ API KEY MODAL ════ -->
 <div class="modal-overlay" id="apikey-modal">
   <div class="modal-box">
-    <div class="modal-title">🔑 Anthropic API Key</div>
-    <div class="modal-sub">ต้องใช้ API Key เพื่อแปลภาษา Key จะเก็บในหน่วยความจำเท่านั้น</div>
+    <div class="modal-title">API Key</div>
+    <div class="modal-sub">ต้องใช้ API Key เพื่อแปลภาษา</div>
     <input class="ak-input" id="ak-input" type="password" placeholder="sk-ant-api03-..." spellcheck="false"/>
     <div class="ak-note">
       รับ API Key ได้ที่ <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
@@ -1398,7 +1456,7 @@ function toggleTranslate(){
     b.className='translate-btn'; b.textContent='🌐 แปล'; return;
   }
   const idx=examOrder[current];
-  if(translationCache[idx]){showTranslation(translationCache[idx]);return;}
+  if(translationCache[(mode==='module'?'m_':'')+idx]){showTranslation(translationCache[(mode==='module'?'m_':'')+idx]);return;}
   doTranslate(idx);
 }
 function openApiModal(idx){pendingIdx=idx;document.getElementById('apikey-modal').style.display='flex';setTimeout(()=>document.getElementById('ak-input').focus(),100);}
@@ -1415,7 +1473,8 @@ function saveApiKey(){
 }
 async function doTranslate(idx){
   if(!anthropicApiKey){openApiModal(idx);return;}
-  const q=questions[idx];
+  const pool = (mode === 'module') ? window._moduleQuestions : questions;
+  const q=pool[idx];
   const btn=document.getElementById('btn-translate');
   btn.className='translate-btn loading'; btn.textContent='⏳ กำลังแปล...'; btn.onclick=null;
   const optsText=Object.entries(q.opts).map(([k,v])=>`${k}. ${v}`).join('\n');
@@ -1430,7 +1489,8 @@ async function doTranslate(idx){
     if(data.error) throw new Error(data.error.message);
     const text=data.content.map(i=>i.text||'').join('');
     const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-    translationCache[idx]=parsed;
+    const cacheKey = (mode==='module'?'m_':'')+idx;
+    translationCache[cacheKey]=parsed;
     showTranslation(parsed);
   } catch(e){
     const b=document.getElementById('btn-translate');
@@ -1452,6 +1512,850 @@ function showTranslation(t){
   box.style.display='block';
   const btn=document.getElementById('btn-translate');
   btn.className='translate-btn on'; btn.textContent='🌐 ซ่อนแปล'; btn.onclick=toggleTranslate;
+}
+
+// ══════════════════════════════════════
+//  MODULE QUESTIONS (Practice Only — NOT in Exam Pool)
+// ══════════════════════════════════════
+const modulePools = [
+  {
+    id: 'mod1',
+    name: 'Module 1: Introduction to Ethical Hacking',
+    questions: [
+      {q:"What is the main purpose of ethical hacking?",opts:{A:"To exploit vulnerabilities for personal gain",B:"To assist organizations in identifying and fixing security flaws",C:"To develop malware for government use",D:"To hack into competitor systems"},ans:["B"]},
+      {q:"Which of the following best describes a white-hat hacker?",opts:{A:"A hacker who breaks into systems illegally",B:"A government-sponsored hacker",C:"A hacker who uses skills to improve security",D:"A hacker who steals information for activism"},ans:["C"]},
+      {q:"Which of the following is a key phase in the ethical hacking process?",opts:{A:"Data exfiltration",B:"Gaining unauthorized access",C:"Reconnaissance",D:"Planting backdoors"},ans:["C"]},
+      {q:"What document authorizes an ethical hacker to perform testing?",opts:{A:"Service-Level Agreement",B:"Contract for Employment",C:"Rules of Engagement",D:"Chain of Custody"},ans:["C"]},
+      {q:"Which organization offers the Certified Ethical Hacker (CEH) certification?",opts:{A:"ISC2",B:"CompTIA",C:"ISACA",D:"EC-Council"},ans:["D"]},
+      {q:"What is the primary concern when performing a penetration test on a live system?",opts:{A:"Incomplete port scanning",B:"Lack of tools",C:"Causing disruption to services",D:"Long scan times"},ans:["C"]},
+      {q:"Which term describes the ability to trace user actions to their source?",opts:{A:"Non-repudiation",B:"Authentication",C:"Integrity",D:"Availability"},ans:["A"]},
+      {q:"Which of the following is a potential legal risk for an unauthorized hacker?",opts:{A:"Loss of system access",B:"Criminal prosecution",C:"Data exposure",D:"Audit failure"},ans:["B"]},
+      {q:"Which of the following is a preventative security control?",opts:{A:"Security logs",B:"Intrusion Detection System",C:"Security awareness training",D:"Vulnerability scan results"},ans:["C"]},
+      {q:"What is the first step in ethical hacking methodology?",opts:{A:"Gaining access",B:"Maintaining access",C:"Scanning",D:"Reconnaissance"},ans:["D"]},
+      {q:"What does the 'CIA' in CIA triad stand for?",opts:{A:"Confidentiality, Integrity, Availability",B:"Control, Investigate, Authenticate",C:"Code, Input, Analysis",D:"Cybersecurity, Infrastructure, Access"},ans:["A"]},
+      {q:"Which hacker type violates laws for malicious purposes?",opts:{A:"White-hat",B:"Blue-hat",C:"Black-hat",D:"Red-hat"},ans:["C"]},
+      {q:"What defines gray-hat hackers?",opts:{A:"They work for the military",B:"They legally test only open-source software",C:"They may break laws but with no malicious intent",D:"They only attack cloud systems"},ans:["C"]},
+      {q:"Which of the following is a part of vulnerability management?",opts:{A:"Brute-force testing",B:"Denial-of-service simulation",C:"Vulnerability scanning",D:"Packet crafting"},ans:["C"]},
+      {q:"Which of the following is an example of a technical control?",opts:{A:"Background checks",B:"Security training",C:"Password policies enforced via GPO",D:"Hiring procedures"},ans:["C"]},
+      {q:"What is the goal of a penetration test?",opts:{A:"To gain unauthorized access to demonstrate skill",B:"To stress test software",C:"To assess security posture through simulated attacks",D:"To monitor employee behavior"},ans:["C"]},
+      {q:"Which of the following best describes risk?",opts:{A:"The presence of malware",B:"The likelihood of a threat exploiting a vulnerability",C:"The number of open ports on a firewall",D:"The discovery of usernames"},ans:["B"]},
+      {q:"Which of the following is an example of reconnaissance?",opts:{A:"Exploiting a buffer overflow",B:"Sending phishing emails",C:"Performing WHOIS queries",D:"Capturing passwords with a keylogger"},ans:["C"]},
+      {q:"Which hacker category might include a security researcher acting without permission?",opts:{A:"White-hat",B:"Black-hat",C:"Gray-hat",D:"Green-hat"},ans:["C"]},
+      {q:"Which concept ensures that data has not been altered?",opts:{A:"Integrity",B:"Availability",C:"Confidentiality",D:"Accountability"},ans:["A"]},
+      {q:"Which of these would you expect in a Rules of Engagement document?",opts:{A:"Login credentials for phishing testing",B:"Budget for a vulnerability scan",C:"List of permitted IP ranges to test",D:"Time zone of the target company"},ans:["C"]},
+      {q:"Which law governs unauthorized access to computer systems in the United States?",opts:{A:"GDPR",B:"CFAA",C:"DMCA",D:"FISMA"},ans:["B"]},
+      {q:"What is the difference between vulnerability assessment and penetration testing?",opts:{A:"Vulnerability assessment tests for malware only",B:"Penetration testing exploits identified vulnerabilities",C:"Vulnerability assessment is illegal",D:"Penetration testing is always passive"},ans:["B"]},
+      {q:"What does the term 'red team' typically refer to in ethical hacking?",opts:{A:"Defensive team managing firewalls",B:"Compliance auditors",C:"Offensive security team simulating attacks",D:"Physical security guards"},ans:["C"]},
+      {q:"What is chain of custody important for in ethical hacking?",opts:{A:"Speeding up scanning results",B:"Ensuring legal admissibility of evidence",C:"Generating more exploits",D:"Reducing testing cost"},ans:["B"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod2',
+    name: 'Module 2: Footprinting and Reconnaissance',
+    questions: [
+      {q:"What is the primary objective of footprinting?",opts:{A:"Exploiting a known vulnerability",B:"Gathering information about a target system",C:"Deleting logs after a successful attack",D:"Installing spyware remotely"},ans:["B"]},
+      {q:"Which of the following is considered a passive footprinting technique?",opts:{A:"Port scanning",B:"WHOIS lookup",C:"Banner grabbing",D:"SNMP walking"},ans:["B"]},
+      {q:"Which tool is commonly used to perform WHOIS queries?",opts:{A:"Nmap",B:"Metasploit",C:"Nslookup",D:"Domain Dossier"},ans:["D"]},
+      {q:"What kind of data does a DNS zone transfer typically reveal?",opts:{A:"MAC addresses of internal hosts",B:"Full listing of subdomains and records",C:"System uptime and patch levels",D:"Password hashes"},ans:["B"]},
+      {q:"Which search technique is used in Google hacking?",opts:{A:"Boolean search",B:"Recursive search",C:"Directory traversal",D:"Google dorking"},ans:["D"]},
+      {q:"Which of the following can be used to discover email addresses during footprinting?",opts:{A:"Shodan",B:"theHarvester",C:"Netcat",D:"Wireshark"},ans:["B"]},
+      {q:"Which record type in DNS maps a domain to an IP address?",opts:{A:"MX",B:"NS",C:"A",D:"PTR"},ans:["C"]},
+      {q:"What command can be used to perform a DNS lookup in Windows?",opts:{A:"dig",B:"dnslookup",C:"nslookup",D:"host"},ans:["C"]},
+      {q:"Which reconnaissance method involves using tools like Shodan or Censys?",opts:{A:"Social engineering",B:"Active footprinting",C:"Passive footprinting",D:"Malware injection"},ans:["C"]},
+      {q:"Which of the following tools is used to collect publicly available information?",opts:{A:"Wireshark",B:"OSINT Framework",C:"Hydra",D:"Tcpdump"},ans:["B"]},
+      {q:"Which website can provide archived versions of a company's web pages?",opts:{A:"Archive.org",B:"Google Scholar",C:"Shodan.io",D:"OpenDNS"},ans:["A"]},
+      {q:"What can be revealed through email footprinting?",opts:{A:"Internal routing tables",B:"OS patch levels",C:"Employee structure and names",D:"File permissions"},ans:["C"]},
+      {q:"Which of the following tools is used to gather subdomain information?",opts:{A:"Netcat",B:"Gobuster",C:"Sublist3r",D:"John the Ripper"},ans:["C"]},
+      {q:"Which command-line tool is used for DNS reconnaissance in Linux?",opts:{A:"traceroute",B:"dig",C:"arp",D:"ssh"},ans:["B"]},
+      {q:"What is the main risk of DNS zone transfer in footprinting?",opts:{A:"Disclosure of public keys",B:"Disclosure of internal hostnames",C:"Disclosure of encryption algorithms",D:"Disclosure of SSL certificates"},ans:["B"]},
+      {q:"Which social engineering technique is most relevant to footprinting?",opts:{A:"Phishing",B:"Pretexting",C:"Baiting",D:"Vishing"},ans:["B"]},
+      {q:"Which of the following sites would be most useful for footprinting an employee's job role?",opts:{A:"Facebook",B:"YouTube",C:"LinkedIn",D:"Instagram"},ans:["C"]},
+      {q:"What type of attack can be enabled by successful email enumeration?",opts:{A:"SQL injection",B:"Brute-force login",C:"DDoS",D:"Man-in-the-middle"},ans:["B"]},
+      {q:"Which tool allows automated gathering of metadata from files?",opts:{A:"Netdiscover",B:"ExifTool",C:"Dirb",D:"FTP"},ans:["B"]},
+      {q:"Which information is typically gathered during passive footprinting?",opts:{A:"OS version via packet injection",B:"Employee names via public records",C:"Service banners via direct scanning",D:"Port numbers via TCP connect scans"},ans:["B"]},
+      {q:"What is an advantage of passive footprinting?",opts:{A:"Generates firewall alerts",B:"Cannot be detected by the target",C:"Allows remote code execution",D:"Provides internal user credentials"},ans:["B"]},
+      {q:"Which of the following Google Dork can locate login pages?",opts:{A:"intitle:index.of",B:"filetype:log",C:"inurl:login",D:"ext:cfg"},ans:["C"]},
+      {q:"Which organization provides the most widely used DNS database for WHOIS queries?",opts:{A:"ICANN",B:"FBI",C:"Google",D:"IEEE"},ans:["A"]},
+      {q:"Which of these actions is considered active footprinting?",opts:{A:"Searching public job postings",B:"Sending DNS zone transfer requests",C:"Reviewing archived websites",D:"Searching social media"},ans:["B"]},
+      {q:"Which of the following can help identify technologies used on a website?",opts:{A:"WhatWeb",B:"ping",C:"Dirb",D:"Netcat"},ans:["A"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod3',
+    name: 'Module 3: Scanning Networks',
+    questions: [
+      {q:"Which of the following is a common objective of network scanning?",opts:{A:"To deliver malware payloads",B:"To identify active hosts and open ports",C:"To perform a brute-force attack",D:"To alter firewall rules"},ans:["B"]},
+      {q:"Which Nmap scan type performs a TCP three-way handshake?",opts:{A:"SYN scan",B:"TCP connect scan",C:"NULL scan",D:"FIN scan"},ans:["B"]},
+      {q:"Which Nmap option enables OS detection?",opts:{A:"-O",B:"-sP",C:"-A",D:"-T4"},ans:["A"]},
+      {q:"Which port is used by the SSH protocol?",opts:{A:"22",B:"23",C:"80",D:"443"},ans:["A"]},
+      {q:"What is the purpose of a ping sweep?",opts:{A:"To scan for vulnerabilities",B:"To identify active hosts on a network",C:"To bypass firewalls",D:"To brute-force login credentials"},ans:["B"]},
+      {q:"Which scan is used to determine the state of a TCP port by sending packets with no flags set?",opts:{A:"NULL scan",B:"FIN scan",C:"Xmas scan",D:"SYN scan"},ans:["A"]},
+      {q:"What does a FIN scan send to the target port?",opts:{A:"No packet",B:"FIN flag only",C:"SYN-ACK flag",D:"RST flag"},ans:["B"]},
+      {q:"Which of the following is the default port for HTTPS?",opts:{A:"80",B:"443",C:"21",D:"8080"},ans:["B"]},
+      {q:"Which command performs a full TCP port scan using Nmap?",opts:{A:"nmap -sS -O",B:"nmap -p-",C:"nmap -sV",D:"nmap -A"},ans:["B"]},
+      {q:"Which scanning technique can be used to detect UDP services?",opts:{A:"SYN scan",B:"TCP connect scan",C:"UDP scan",D:"ACK scan"},ans:["C"]},
+      {q:"Which of the following indicates an open TCP port during scanning?",opts:{A:"RST response",B:"ICMP unreachable",C:"SYN-ACK response",D:"FIN-ACK response"},ans:["C"]},
+      {q:"Which tool is used to identify services and versions running on open ports?",opts:{A:"Wireshark",B:"Netstat",C:"Nmap with -sV",D:"Tcpdump"},ans:["C"]},
+      {q:"Which scanning technique is typically used to map firewall rules?",opts:{A:"TCP connect scan",B:"SYN scan",C:"ACK scan",D:"FIN scan"},ans:["C"]},
+      {q:"Which of the following tools can be used to scan a network for live hosts?",opts:{A:"theHarvester",B:"ping sweep tool",C:"sqlmap",D:"Burp Suite"},ans:["B"]},
+      {q:"Which flag combination is used in TCP Xmas scan?",opts:{A:"URG, PSH, FIN",B:"SYN, ACK, RST",C:"FIN, ACK, URG",D:"RST, PSH, URG"},ans:["A"]},
+      {q:"What is the role of an IP ID field in OS fingerprinting?",opts:{A:"Identifies which ports are filtered",B:"Tracks session IDs",C:"Helps determine the OS by analyzing how IDs are incremented",D:"Verifies DNS resolution"},ans:["C"]},
+      {q:"Which scanning method is the least likely to be detected by a firewall?",opts:{A:"TCP connect scan",B:"UDP scan",C:"FIN scan",D:"SYN scan"},ans:["C"]},
+      {q:"What does Nmap's -sS option do?",opts:{A:"Conducts a TCP connect scan",B:"Sends SYN packets to perform a stealth scan",C:"Initiates a full connection",D:"Conducts a UDP scan"},ans:["B"]},
+      {q:"Which scanning phase involves identifying the live systems on a network?",opts:{A:"Port scanning",B:"Vulnerability scanning",C:"Host discovery",D:"Enumeration"},ans:["C"]},
+      {q:"What does a response of ICMP Type 3 Code 13 mean?",opts:{A:"Host unreachable",B:"Port unreachable",C:"Communication administratively prohibited",D:"Destination network unknown"},ans:["C"]},
+      {q:"Which tool is most suitable for a large-scale port scan?",opts:{A:"Wireshark",B:"Nikto",C:"Nmap",D:"Hydra"},ans:["C"]},
+      {q:"What can be used to determine the operating system during scanning?",opts:{A:"FTP enumeration",B:"TTL and TCP window size analysis",C:"DNS lookup only",D:"Banner grabbing via ICMP"},ans:["B"]},
+      {q:"Which scan type sends packets with no flags set to identify open ports?",opts:{A:"ACK scan",B:"NULL scan",C:"SYN scan",D:"TCP connect scan"},ans:["B"]},
+      {q:"What is the effect of scanning a network using a high timing template (-T5)?",opts:{A:"Avoids detection",B:"Increases scan reliability",C:"Increases scan speed but may raise alerts",D:"Uses fewer resources on the target"},ans:["C"]},
+      {q:"Which scan type is best for discovering live hosts without port scanning?",opts:{A:"SYN scan",B:"NULL scan",C:"Ping scan (-sn)",D:"Version scan (-sV)"},ans:["C"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod4',
+    name: 'Module 4: Enumeration',
+    questions: [
+      {q:"Which of the following protocols is commonly used for enumerating Windows user accounts?",opts:{A:"SMTP",B:"SNMP",C:"NetBIOS",D:"FTP"},ans:["C"]},
+      {q:"What is the default port number for SMB enumeration?",opts:{A:"137",B:"443",C:"139",D:"21"},ans:["C"]},
+      {q:"Which tool is commonly used on Linux systems to enumerate Windows shares and users?",opts:{A:"Wireshark",B:"enum4linux",C:"Nikto",D:"Netcat"},ans:["B"]},
+      {q:"Which command is used to list user accounts on a Windows machine?",opts:{A:"whoami",B:"net user",C:"hostname",D:"ipconfig"},ans:["B"]},
+      {q:"Which SNMP community string is often used for enumeration by default?",opts:{A:"admin",B:"manager",C:"root",D:"public"},ans:["D"]},
+      {q:"Which Windows port is used by the NetBIOS session service?",opts:{A:"137",B:"138",C:"139",D:"445"},ans:["C"]},
+      {q:"What kind of information can be collected during SNMP enumeration?",opts:{A:"SSL certificates",B:"User browsing history",C:"System uptime and routing tables",D:"TCP banner messages"},ans:["C"]},
+      {q:"Which tool is used to interact with RPC services for enumeration?",opts:{A:"rpcinfo",B:"Netcat",C:"hping3",D:"Whois"},ans:["A"]},
+      {q:"Which port is primarily used for LDAP enumeration?",opts:{A:"389",B:"636",C:"21",D:"110"},ans:["A"]},
+      {q:"What is the result of a successful SMTP VRFY command?",opts:{A:"Password hash retrieval",B:"IP address of user",C:"Confirmation that a username exists",D:"Server crash"},ans:["C"]},
+      {q:"Which technique uses TCP or UDP to extract data from services like SMB and SNMP?",opts:{A:"Footprinting",B:"Enumeration",C:"Reconnaissance",D:"Phishing"},ans:["B"]},
+      {q:"Which enumeration method uses Windows RPC and null sessions to collect information?",opts:{A:"ARP cache poisoning",B:"NFS probing",C:"NetBIOS NULL session",D:"Passive scanning"},ans:["C"]},
+      {q:"Which command can be used to enumerate shared folders in Windows?",opts:{A:"ipconfig /all",B:"net view \\\\hostname",C:"tasklist /SVC",D:"ping \\\\hostname"},ans:["B"]},
+      {q:"Which tool provides SNMP enumeration functionality on Linux?",opts:{A:"snmpenum",B:"netdiscover",C:"dnsenum",D:"netcat"},ans:["A"]},
+      {q:"Which port is commonly used by Active Directory for enumeration?",opts:{A:"21",B:"389",C:"1433",D:"23"},ans:["B"]},
+      {q:"Which of the following is most useful in enumerating domain controllers?",opts:{A:"LDAP queries",B:"Ping sweep",C:"Port scanning",D:"MAC address spoofing"},ans:["A"]},
+      {q:"What is the role of a NULL session in Windows enumeration?",opts:{A:"Gathers encrypted credentials",B:"Executes scripts remotely",C:"Connects to IPC$ share anonymously to enumerate info",D:"Exploits SQL databases"},ans:["C"]},
+      {q:"Which command is used to enumerate RPC services on Unix-based systems?",opts:{A:"rstatd",B:"showmount",C:"rpcinfo",D:"snmpwalk"},ans:["C"]},
+      {q:"Which of the following is a risk of enumeration activities?",opts:{A:"Revealing encryption algorithms",B:"Triggering IDS alerts",C:"Discovering SSL certificates",D:"Changing DNS records"},ans:["B"]},
+      {q:"Which command-line tool can be used to enumerate users via SMB?",opts:{A:"traceroute",B:"enum4linux",C:"tcpdump",D:"sqlmap"},ans:["B"]},
+      {q:"What data might be collected via NTP enumeration?",opts:{A:"Open web ports",B:"Time synchronization stats and version info",C:"Email addresses",D:"DNS zone transfers"},ans:["B"]},
+      {q:"Which Metasploit module can be used for SNMP enumeration?",opts:{A:"auxiliary/scanner/snmp/snmp_enum",B:"auxiliary/admin/smb/smb_enum",C:"exploit/windows/smb/ms17_010_eternalblue",D:"auxiliary/scanner/http/http_login"},ans:["A"]},
+      {q:"What is one purpose of enumeration in the ethical hacking lifecycle?",opts:{A:"Exploit vulnerabilities directly",B:"Identify valid usernames, groups, and shares",C:"Perform phishing attacks",D:"Obfuscate attacker identity"},ans:["B"]},
+      {q:"What is the default SNMP port?",opts:{A:"161",B:"80",C:"110",D:"443"},ans:["A"]},
+      {q:"Which of the following enumeration tools focuses on NFS shares?",opts:{A:"enum4linux",B:"nfsenum",C:"showmount",D:"smbclient"},ans:["C"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod5',
+    name: 'Module 5: Vulnerability Analysis',
+    questions: [
+      {q:"What is the primary goal of vulnerability analysis?",opts:{A:"Exploit known vulnerabilities",B:"Discover and classify security weaknesses",C:"Perform brute-force attacks",D:"Capture network traffic"},ans:["B"]},
+      {q:"Which of the following tools is widely used for vulnerability scanning?",opts:{A:"Nmap",B:"Nikto",C:"Nessus",D:"Netcat"},ans:["C"]},
+      {q:"Which type of vulnerability is most commonly found in web applications?",opts:{A:"Buffer overflow",B:"Cross-site scripting (XSS)",C:"Open SMTP relays",D:"Open SNMP ports"},ans:["B"]},
+      {q:"Which of the following represents a false positive in vulnerability scanning?",opts:{A:"A vulnerability detected and successfully exploited",B:"A vulnerability reported that does not exist",C:"A vulnerability discovered via banner grabbing",D:"A vulnerability used in a red team exercise"},ans:["B"]},
+      {q:"Which protocol is often scanned for default community strings in vulnerability analysis?",opts:{A:"FTP",B:"SMTP",C:"SNMP",D:"RDP"},ans:["C"]},
+      {q:"Which tool helps identify outdated software and patch levels?",opts:{A:"Sqlmap",B:"Nikto",C:"Nessus",D:"Wireshark"},ans:["C"]},
+      {q:"What does CVE stand for?",opts:{A:"Common Vulnerabilities Enumeration",B:"Certified Vulnerability Expert",C:"Common Vulnerabilities and Exposures",D:"Computer Vulnerability Engine"},ans:["C"]},
+      {q:"Which vulnerability scanning tool is open-source?",opts:{A:"Nexpose",B:"Burp Suite Professional",C:"OpenVAS",D:"Qualys"},ans:["C"]},
+      {q:"What is a major drawback of automated vulnerability scanners?",opts:{A:"They don't detect any vulnerabilities",B:"They require no configuration",C:"They may produce false positives and false negatives",D:"They can only run on Linux"},ans:["C"]},
+      {q:"Which of the following is a benefit of performing regular vulnerability assessments?",opts:{A:"It prevents ransomware attacks",B:"It ensures compliance and reduces risk exposure",C:"It replaces the need for antivirus",D:"It guarantees 100% security"},ans:["B"]},
+      {q:"Which component of a vulnerability report helps in prioritizing risks?",opts:{A:"IP address of the host",B:"Scanner log files",C:"CVSS score",D:"File size of the target"},ans:["C"]},
+      {q:"What is the typical first step in a vulnerability assessment process?",opts:{A:"Exploitation",B:"Information gathering",C:"Reporting",D:"Patch deployment"},ans:["B"]},
+      {q:"Which term describes a vulnerability with no known patch or fix?",opts:{A:"Open vulnerability",B:"Zero-day",C:"Known error",D:"Buffer flaw"},ans:["B"]},
+      {q:"Which of these is typically NOT a vulnerability scanning category?",opts:{A:"Credentialed scan",B:"Non-credentialed scan",C:"Heuristic scan",D:"Exploit scan"},ans:["D"]},
+      {q:"Which scanning approach involves using system credentials for deeper insight?",opts:{A:"Passive scan",B:"Active scan",C:"Non-credentialed scan",D:"Credentialed scan"},ans:["D"]},
+      {q:"Which of the following vulnerabilities can lead to privilege escalation?",opts:{A:"Open DNS port",B:"Misconfigured sudo permissions",C:"Lack of TLS",D:"Incorrect NTP settings"},ans:["B"]},
+      {q:"What is the purpose of CVSS in vulnerability analysis?",opts:{A:"It encrypts the vulnerability scanner",B:"It standardizes vulnerability detection tools",C:"It provides a scoring system to prioritize vulnerabilities",D:"It tracks login attempts"},ans:["C"]},
+      {q:"Which tool focuses specifically on web application vulnerabilities?",opts:{A:"Nikto",B:"Netcat",C:"Traceroute",D:"Nmap"},ans:["A"]},
+      {q:"Which type of vulnerability would allow attackers to inject unauthorized SQL commands?",opts:{A:"Path traversal",B:"Cross-site request forgery",C:"SQL injection",D:"XSS"},ans:["C"]},
+      {q:"Which of the following is a limitation of non-credentialed scans?",opts:{A:"They require root privileges",B:"They miss internal OS-level vulnerabilities",C:"They patch vulnerabilities automatically",D:"They identify too many critical issues"},ans:["B"]},
+      {q:"Which command-line tool can be used for basic vulnerability checking via HTTP headers?",opts:{A:"curl -I",B:"netstat",C:"dig",D:"arp"},ans:["A"]},
+      {q:"Which of the following is NOT typically included in a vulnerability report?",opts:{A:"Risk rating",B:"Suggested remediation",C:"Number of emails sent",D:"Affected systems"},ans:["C"]},
+      {q:"What is a zero false-positive vulnerability assessment?",opts:{A:"One that only runs manual scans",B:"An ideal scenario with no incorrect alerts",C:"A scanner that detects phishing attacks",D:"A credentialed scan with no results"},ans:["B"]},
+      {q:"Which cloud-based tool is often used for external vulnerability analysis?",opts:{A:"OpenVAS",B:"Qualys",C:"Netcat",D:"Aircrack-ng"},ans:["B"]},
+    ]
+  },
+  {
+    id: 'mod6',
+    name: 'Module 6: System Hacking',
+    questions: [
+      {q:"Which of the following is a primary objective of system hacking?",opts:{A:"Conducting passive reconnaissance",B:"Exploiting vulnerabilities to gain unauthorized access",C:"Sending phishing emails",D:"Performing DNS enumeration"},ans:["B"]},
+      {q:"Which of the following tools can be used to dump password hashes from a Windows system?",opts:{A:"Nmap",B:"Metasploit",C:"John the Ripper",D:"Mimikatz"},ans:["D"]},
+      {q:"Which attack involves trying all possible password combinations until the correct one is found?",opts:{A:"Dictionary attack",B:"Brute-force attack",C:"Social engineering",D:"Rainbow table attack"},ans:["B"]},
+      {q:"What is the purpose of privilege escalation in system hacking?",opts:{A:"Lower the user's access rights",B:"Run system updates",C:"Gain higher-level access such as administrator or root",D:"Hide the attack from IDS"},ans:["C"]},
+      {q:"Which of the following best defines steganography?",opts:{A:"Scrambling data with symmetric encryption",B:"Hiding data inside other files such as images",C:"Encoding commands in TCP packets",D:"Writing viruses that self-replicate"},ans:["B"]},
+      {q:"Which command lists all users on a Windows system from the command prompt?",opts:{A:"whoami",B:"net user",C:"hostname",D:"ipconfig"},ans:["B"]},
+      {q:"What is the role of the SAM file in Windows systems?",opts:{A:"Stores system logs",B:"Contains system registry values",C:"Stores user password hashes",D:"Logs DNS queries"},ans:["C"]},
+      {q:"Which of the following is a method used for hiding running processes on a system?",opts:{A:"Rootkits",B:"Firewalls",C:"Hash tables",D:"Session hijacking"},ans:["A"]},
+      {q:"Which attack replaces the user's login shell to maintain access?",opts:{A:"Trojan",B:"Rootkit injection",C:"Shell replacement attack",D:"Backdoor shell"},ans:["C"]},
+      {q:"Which of the following attacks captures keystrokes to steal credentials?",opts:{A:"Buffer overflow",B:"Session hijacking",C:"Keylogging",D:"Privilege escalation"},ans:["C"]},
+      {q:"Which of the following tools can crack Windows password hashes offline?",opts:{A:"Wireshark",B:"Hydra",C:"John the Ripper",D:"Maltego"},ans:["C"]},
+      {q:"Which Linux file contains user account information and hashed passwords?",opts:{A:"/etc/shadow",B:"/etc/passwd",C:"/etc/users",D:"/home/.user"},ans:["A"]},
+      {q:"Which method can be used to hide a file in Windows?",opts:{A:"Use of /dev/null",B:"Hiding in Alternate Data Streams (ADS)",C:"Running a cron job",D:"Renaming the file with .bak extension"},ans:["B"]},
+      {q:"What is the primary purpose of clearing event logs in system hacking?",opts:{A:"To free up disk space",B:"To prevent detection and forensic analysis",C:"To update system patches",D:"To reboot the target system"},ans:["B"]},
+      {q:"Which of the following is an example of a post-exploitation activity?",opts:{A:"Scanning open ports",B:"Delivering phishing emails",C:"Maintaining access through a backdoor",D:"Performing a DNS query"},ans:["C"]},
+      {q:"Which command in Linux is used to change file ownership?",opts:{A:"chmod",B:"chgrp",C:"chown",D:"usermod"},ans:["C"]},
+      {q:"What is the use of a bind shell in hacking?",opts:{A:"To bind malware to a host process",B:"To execute remote web applications",C:"To open a listening port for reverse connections",D:"To allow a remote attacker to connect to a shell"},ans:["D"]},
+      {q:"Which of the following can be used to maintain access on a compromised system?",opts:{A:"Trojan horse",B:"Firewall rules",C:"Secure boot",D:"Sandboxing"},ans:["A"]},
+      {q:"Which of the following commands in Linux displays the current user's effective ID?",opts:{A:"id",B:"whoami",C:"groups",D:"passwd"},ans:["A"]},
+      {q:"Which tool in Metasploit allows privilege escalation through known exploits?",opts:{A:"msfvenom",B:"exploit/windows/local",C:"nmap",D:"snmpwalk"},ans:["B"]},
+      {q:"What is a common use of the 'at' command in Windows post-exploitation?",opts:{A:"Run file explorer",B:"Start antivirus scan",C:"Schedule a malicious task",D:"Reboot the system"},ans:["C"]},
+      {q:"What type of attack involves modifying a system to allow repeated access?",opts:{A:"Reconnaissance attack",B:"Spoofing attack",C:"Persistent backdoor installation",D:"Sniffing attack"},ans:["C"]},
+      {q:"Which of the following best helps an attacker escalate privileges on a local system?",opts:{A:"Open FTP ports",B:"Misconfigured SUID binaries",C:"HTTPS traffic logs",D:"VPN tunnels"},ans:["B"]},
+      {q:"What is the purpose of a reverse shell?",opts:{A:"It tunnels traffic through SSH",B:"It creates encrypted backups",C:"It allows a target system to initiate connection to the attacker",D:"It encrypts outgoing packets"},ans:["C"]},
+    ]
+  },
+  {
+    id: 'mod7',
+    name: 'Module 7: Malware Threats',
+    questions: [
+      {q:"What is the primary goal of malware?",opts:{A:"To encrypt legitimate traffic",B:"To test firewall rules",C:"To disrupt, damage, or gain unauthorized access to systems",D:"To perform routine system updates"},ans:["C"]},
+      {q:"Which type of malware disguises itself as a legitimate program?",opts:{A:"Worm",B:"Rootkit",C:"Trojan horse",D:"Ransomware"},ans:["C"]},
+      {q:"What is the primary method a worm uses to spread?",opts:{A:"Bundled with software installers",B:"Through email attachments only",C:"Self-replicates across networks",D:"Embedded in PDFs"},ans:["C"]},
+      {q:"Which malware type locks access to systems or files and demands payment?",opts:{A:"Spyware",B:"Adware",C:"Keylogger",D:"Ransomware"},ans:["D"]},
+      {q:"Which type of malware hides its presence on the infected system?",opts:{A:"Virus",B:"Adware",C:"Rootkit",D:"Botnet"},ans:["C"]},
+      {q:"What is a keylogger designed to do?",opts:{A:"Track browser cookies",B:"Record user keystrokes",C:"Execute shellcode",D:"Encrypt all files on a system"},ans:["B"]},
+      {q:"Which of the following best defines a logic bomb?",opts:{A:"A software that disables antivirus programs",B:"A program that executes only when certain conditions are met",C:"A worm that spreads via removable media",D:"A virus disguised as an image file"},ans:["B"]},
+      {q:"Which tool is commonly used to analyze malware in a safe environment?",opts:{A:"Nessus",B:"Any.Run",C:"Wireshark",D:"Shodan"},ans:["B"]},
+      {q:"Which technique helps detect malware by observing behavior instead of code?",opts:{A:"Signature-based detection",B:"Behavioral analysis",C:"Heuristic flagging",D:"Static binary scan"},ans:["B"]},
+      {q:"Which malware spreads by attaching itself to executable files?",opts:{A:"Trojan",B:"Rootkit",C:"Worm",D:"Virus"},ans:["D"]},
+      {q:"Which port is often targeted by malware exploiting SMB vulnerabilities?",opts:{A:"80",B:"443",C:"139",D:"8080"},ans:["C"]},
+      {q:"Which of the following can form a botnet when infected?",opts:{A:"Printer driver",B:"IoT device",C:"BIOS firmware",D:"Router firmware updates"},ans:["B"]},
+      {q:"Which malware relies on encryption to evade detection and hinder analysis?",opts:{A:"Worm",B:"Polymorphic malware",C:"Trojan",D:"Adware"},ans:["B"]},
+      {q:"What is the main difference between a virus and a worm?",opts:{A:"Viruses spread via USB, worms only online",B:"Worms require a host file, viruses do not",C:"Worms are self-replicating; viruses need a host program",D:"There is no functional difference"},ans:["C"]},
+      {q:"Which of these is a delivery method for malware?",opts:{A:"Fileless storage",B:"Malicious email attachments",C:"TPM firmware upgrade",D:"DNS tunneling"},ans:["B"]},
+      {q:"Which component is most often used in ransomware to encrypt files?",opts:{A:"MD5 hashing",B:"XOR obfuscation",C:"AES or RSA encryption",D:"Base64 encoding"},ans:["C"]},
+      {q:"Which type of malware pretends to be antivirus software?",opts:{A:"Ransomware",B:"Scareware",C:"Logic bomb",D:"Spyware"},ans:["B"]},
+      {q:"Which of the following tools is useful for unpacking malware binaries?",opts:{A:"Burp Suite",B:"UPX",C:"OpenVAS",D:"DirBuster"},ans:["B"]},
+      {q:"Which malware component enables remote control over infected systems?",opts:{A:"Keylogger",B:"Command-and-control (C2) server",C:"DNS resolver",D:"Syslog service"},ans:["B"]},
+      {q:"Which of the following file types is most often used to distribute macro malware?",opts:{A:".exe",B:".docm",C:".iso",D:".zip"},ans:["B"]},
+      {q:"What is a dropper in malware terminology?",opts:{A:"A tool that deletes user files",B:"A type of firewall bypass",C:"A program designed to install other malicious payloads",D:"A service that removes malware"},ans:["C"]},
+      {q:"Which of the following is NOT a common malware behavior?",opts:{A:"Disabling antivirus software",B:"Opening unused TCP ports",C:"Encrypting registry files",D:"Establishing persistent access"},ans:["C"]},
+      {q:"Which malware category includes software that secretly collects user information?",opts:{A:"Spyware",B:"Worm",C:"Ransomware",D:"Scareware"},ans:["A"]},
+      {q:"Which tool helps analyze dynamic malware behavior in a virtualized environment?",opts:{A:"Ghidra",B:"Cuckoo Sandbox",C:"tcpdump",D:"dnsenum"},ans:["B"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod8',
+    name: 'Module 8: Sniffing',
+    questions: [
+      {q:"What is the primary goal of sniffing in cybersecurity?",opts:{A:"To scan for open ports",B:"To capture and analyze network traffic",C:"To brute-force passwords",D:"To disable firewalls"},ans:["B"]},
+      {q:"Which tool is commonly used for packet sniffing?",opts:{A:"Nessus",B:"Nmap",C:"Wireshark",D:"Nikto"},ans:["C"]},
+      {q:"Which network mode must a network interface be in to perform sniffing?",opts:{A:"Managed mode",B:"Broadcast mode",C:"Promiscuous mode",D:"Passive mode"},ans:["C"]},
+      {q:"Which of the following is a method used to sniff traffic on a switched network?",opts:{A:"SYN flood",B:"MAC flooding",C:"Port scanning",D:"DNS spoofing"},ans:["B"]},
+      {q:"Which protocol is most vulnerable to sniffing attacks if not encrypted?",opts:{A:"HTTPS",B:"SSH",C:"Telnet",D:"FTPS"},ans:["C"]},
+      {q:"Which of the following attacks involves spoofing ARP messages to redirect traffic?",opts:{A:"DNS poisoning",B:"ARP spoofing",C:"TCP hijacking",D:"DHCP starvation"},ans:["B"]},
+      {q:"What type of attack does a switch CAM table overflow help enable?",opts:{A:"Man-in-the-middle attack",B:"DDoS attack",C:"Email spoofing attack",D:"SQL injection"},ans:["A"]},
+      {q:"What does the term 'MITM' stand for in the context of sniffing?",opts:{A:"Middle Intrusion Tactic Method",B:"Message Interference Technical Malware",C:"Man-in-the-Middle",D:"Monitoring Internal Transmission Model"},ans:["C"]},
+      {q:"Which tool is used for ARP poisoning on local networks?",opts:{A:"sqlmap",B:"ettercap",C:"netcat",D:"dig"},ans:["B"]},
+      {q:"What is the function of a packet sniffer?",opts:{A:"Encrypt data in transit",B:"Detect SQL injection",C:"Capture and analyze network traffic",D:"Filter out malicious emails"},ans:["C"]},
+      {q:"Which protocol does not use encryption and is commonly captured during sniffing attacks?",opts:{A:"FTP",B:"SFTP",C:"HTTPS",D:"SCP"},ans:["A"]},
+      {q:"What is the primary weakness of Telnet in terms of sniffing?",opts:{A:"Port 80 is used for Telnet",B:"It tunnels data over SSL",C:"Data is transmitted in plaintext",D:"It only allows administrator access"},ans:["C"]},
+      {q:"Which of the following tools supports DNS spoofing and sniffing?",opts:{A:"Nmap",B:"Hydra",C:"Cain & Abel",D:"Sqlmap"},ans:["C"]},
+      {q:"Which command can be used in Linux to capture network packets?",opts:{A:"netstat",B:"tcpdump",C:"ifconfig",D:"ping"},ans:["B"]},
+      {q:"What is the default port for unencrypted HTTP traffic, which may be captured by sniffers?",opts:{A:"443",B:"20",C:"22",D:"80"},ans:["D"]},
+      {q:"Which protocol is most commonly used in sniffing for session hijacking?",opts:{A:"ICMP",B:"TCP",C:"UDP",D:"ARP"},ans:["B"]},
+      {q:"Which countermeasure helps prevent packet sniffing on a network?",opts:{A:"Enable port forwarding",B:"Use HTTPS and SSH protocols",C:"Use plain-text authentication",D:"Implement hub-based networking"},ans:["B"]},
+      {q:"Which attack sends a continuous flood of ARP requests to a switch?",opts:{A:"MAC flooding",B:"DNS poisoning",C:"SYN flood",D:"Smurf attack"},ans:["A"]},
+      {q:"Which method is effective in detecting sniffers on the same network segment?",opts:{A:"Send a malformed DNS request",B:"Use anti-virus software",C:"Broadcast a fake ARP request and analyze responses",D:"Perform OSINT on public records"},ans:["C"]},
+      {q:"What type of attack occurs when a sniffer modifies the traffic in real time?",opts:{A:"Passive sniffing",B:"Active sniffing",C:"Port mirroring",D:"Traffic shaping"},ans:["B"]},
+      {q:"Which sniffing tool is primarily used in GUI-based packet inspection?",opts:{A:"Netcat",B:"Wireshark",C:"hping3",D:"curl"},ans:["B"]},
+      {q:"Which of the following describes sniffing encrypted traffic over HTTPS?",opts:{A:"It reveals usernames and passwords in plaintext",B:"Only IP headers can be viewed, not payloads",C:"It reveals session cookies easily",D:"Full decryption is automatic"},ans:["B"]},
+      {q:"Which attack involves intercepting a communication between two systems and injecting data?",opts:{A:"Passive sniffing",B:"Packet fragmentation",C:"Man-in-the-middle attack",D:"Spoofed DNS request"},ans:["C"]},
+      {q:"Which of the following makes sniffing on wireless networks easier for attackers?",opts:{A:"Use of WPA2 encryption",B:"Broadcasting SSIDs",C:"Disabling DHCP",D:"Segmenting traffic with VLANs"},ans:["B"]},
+    ]
+  },
+  {
+    id: 'mod9',
+    name: 'Module 9: Social Engineering',
+    questions: [
+      {q:"What is social engineering in the context of cybersecurity?",opts:{A:"Using software to exploit a network",B:"Exploiting human behavior to gain unauthorized access",C:"Reverse engineering an application",D:"Cracking password hashes"},ans:["B"]},
+      {q:"Which of the following is an example of a social engineering attack?",opts:{A:"SQL injection",B:"Sending a phishing email to steal credentials",C:"Performing a port scan",D:"Exploiting a buffer overflow vulnerability"},ans:["B"]},
+      {q:"Which social engineering technique involves pretending to be someone in authority?",opts:{A:"Phishing",B:"Tailgating",C:"Pretexting",D:"Shoulder surfing"},ans:["C"]},
+      {q:"What is tailgating in a physical security context?",opts:{A:"Watching someone type their password",B:"Following someone into a restricted area without authentication",C:"Using a fake ID to access a server room",D:"Bypassing biometric authentication"},ans:["B"]},
+      {q:"What does phishing typically involve?",opts:{A:"Physically accessing a secure server",B:"Sending fraudulent emails to trick users",C:"Stealing a mobile phone to gain access",D:"Using malware to exploit zero-day vulnerabilities"},ans:["B"]},
+      {q:"Which of the following is a type of phishing that targets specific individuals?",opts:{A:"Spear phishing",B:"Whaling",C:"Vishing",D:"Clone phishing"},ans:["A"]},
+      {q:"What is vishing?",opts:{A:"A phishing attempt via voicemail",B:"A phishing attack via voice calls",C:"A phishing email that spoofs government emails",D:"A visual-based shoulder surfing technique"},ans:["B"]},
+      {q:"Which technique involves observing someone's screen or keyboard to obtain information?",opts:{A:"Pretexting",B:"Shoulder surfing",C:"Tailgating",D:"Vishing"},ans:["B"]},
+      {q:"Which type of social engineering uses a copy of a legitimate message to trick users?",opts:{A:"Spear phishing",B:"Whaling",C:"Clone phishing",D:"Dumpster diving"},ans:["C"]},
+      {q:"What is the term for targeting high-profile individuals with social engineering?",opts:{A:"Vishing",B:"Whaling",C:"Tailgating",D:"Baiting"},ans:["B"]},
+      {q:"Which of the following is a countermeasure for social engineering?",opts:{A:"Firewalls",B:"Regular user training and awareness programs",C:"Port scanning",D:"Antivirus software"},ans:["B"]},
+      {q:"What does a baiting attack rely on?",opts:{A:"Threatening to reveal sensitive data",B:"Offering something enticing to lure a victim",C:"Monitoring open network ports",D:"Injecting malicious scripts into websites"},ans:["B"]},
+      {q:"Which type of social engineering attack occurs in person and not over a network?",opts:{A:"Phishing",B:"Vishing",C:"Pretexting",D:"Tailgating"},ans:["D"]},
+      {q:"Which of the following is most effective in preventing social engineering attacks?",opts:{A:"IP whitelisting",B:"User awareness training",C:"Email encryption",D:"Patch management"},ans:["B"]},
+      {q:"How can an attacker use social engineering in a helpdesk scenario?",opts:{A:"Scan for open ports on the server",B:"Trick the helpdesk into resetting a password",C:"Create a fake website to collect passwords",D:"Install keyloggers remotely"},ans:["B"]},
+      {q:"What is a good practice to detect phishing emails?",opts:{A:"Trust all attachments from known users",B:"Click links to verify authenticity",C:"Check the sender's domain and hover over links",D:"Respond immediately if it seems urgent"},ans:["C"]},
+      {q:"What is the main difference between spear phishing and regular phishing?",opts:{A:"Spear phishing is always sent via SMS",B:"Phishing targets organizations; spear phishing targets random people",C:"Spear phishing is more targeted and personalized",D:"There is no difference"},ans:["C"]},
+      {q:"Which scenario best describes a pretexting attack?",opts:{A:"Sending mass emails to get bank credentials",B:"Following someone into a secure building",C:"Pretending to be a tech support agent to get a password",D:"Digging through trash to find sensitive information"},ans:["C"]},
+      {q:"Dumpster diving is best described as:",opts:{A:"Exploiting system vulnerabilities",B:"Searching trash for sensitive information",C:"Manipulating DNS records",D:"Sniffing packets on a network"},ans:["B"]},
+      {q:"What is the primary human vulnerability exploited in social engineering?",opts:{A:"Trust",B:"Ignorance",C:"Curiosity",D:"All of the above"},ans:["D"]},
+      {q:"Which tool can simulate phishing attacks to test employee awareness?",opts:{A:"Metasploit",B:"GoPhish",C:"Nmap",D:"Nessus"},ans:["B"]},
+      {q:"How does USB baiting work?",opts:{A:"Encrypts USB drives using ransomware",B:"Uses USB drives to transfer large malware payloads",C:"Leaves infected USBs in public places for users to plug in",D:"Blocks USB ports with malware"},ans:["C"]},
+      {q:"Which of the following is a sign of a phishing website?",opts:{A:"HTTPS and valid certificate",B:"Domain spelling errors and suspicious login forms",C:"Clean layout with official logos",D:"Linked from a government website"},ans:["B"]},
+      {q:"Which regulation often includes provisions for user security awareness training?",opts:{A:"PCI-DSS",B:"DMARC",C:"DNSSEC",D:"SPF"},ans:["A"]},
+    ]
+  },
+  {
+    id: 'mod10',
+    name: 'Module 10: Denial-of-Service (DoS)',
+    questions: [
+      {q:"What is the main goal of a Denial-of-Service (DoS) attack?",opts:{A:"Gain root access",B:"Intercept network traffic",C:"Render a system or service unavailable",D:"Steal credentials"},ans:["C"]},
+      {q:"Which of the following is a characteristic of a DoS attack?",opts:{A:"Low bandwidth usage",B:"Data exfiltration",C:"Overwhelming system resources",D:"Privilege escalation"},ans:["C"]},
+      {q:"Which type of DoS attack sends incomplete handshake requests to exhaust server resources?",opts:{A:"ICMP Flood",B:"SYN Flood",C:"DNS Spoofing",D:"ARP Poisoning"},ans:["B"]},
+      {q:"Which protocol is primarily used in Smurf attacks?",opts:{A:"TCP",B:"HTTP",C:"ICMP",D:"ARP"},ans:["C"]},
+      {q:"What is a DDoS attack?",opts:{A:"A virus-based infection",B:"A distributed effort to create rootkits",C:"A coordinated DoS attack from multiple systems",D:"An attack targeting physical hardware"},ans:["C"]},
+      {q:"Which tool is commonly used for launching DoS attacks?",opts:{A:"John the Ripper",B:"LOIC",C:"Nmap",D:"Aircrack-ng"},ans:["B"]},
+      {q:"Which type of DoS attack exploits fragmented packets to crash a system?",opts:{A:"Fraggle attack",B:"Teardrop attack",C:"SYN flood",D:"Ping of death"},ans:["B"]},
+      {q:"Which layer of the OSI model is primarily affected by a SYN flood attack?",opts:{A:"Application",B:"Presentation",C:"Transport",D:"Data Link"},ans:["C"]},
+      {q:"What does a 'ping of death' attack do?",opts:{A:"Encrypts the ping responses",B:"Sends oversized ICMP packets to crash systems",C:"Maps devices on a network",D:"Logs ping requests for monitoring"},ans:["B"]},
+      {q:"Which of the following helps prevent DoS attacks?",opts:{A:"Port forwarding",B:"Web proxies",C:"Rate limiting and firewalls",D:"MAC address filtering"},ans:["C"]},
+      {q:"Which type of attack floods DNS servers with requests to exhaust resources?",opts:{A:"DNS Cache Poisoning",B:"DNS Tunneling",C:"DNS Amplification",D:"DNS Redirection"},ans:["C"]},
+      {q:"Which type of botnet is used to perform a DDoS attack?",opts:{A:"Honeypot",B:"Rootkit",C:"Zombie network",D:"RAT"},ans:["C"]},
+      {q:"What is the purpose of using spoofed IP addresses in a DoS attack?",opts:{A:"Bypass content filters",B:"Remain anonymous and avoid detection",C:"Increase encryption speed",D:"Enable file sharing"},ans:["B"]},
+      {q:"Which of the following is an effect of a successful DoS attack?",opts:{A:"Firewall bypass",B:"System updates",C:"Service unavailability",D:"Secure tunneling"},ans:["C"]},
+      {q:"How does a UDP flood attack impact a target system?",opts:{A:"It forces the system to reboot",B:"It fills the system's DNS cache",C:"It overwhelms ports with UDP packets",D:"It logs all connections"},ans:["C"]},
+      {q:"What is one of the main limitations of a traditional DoS attack?",opts:{A:"It is encrypted by default",B:"It requires root access",C:"It originates from a single source, making it easier to block",D:"It only targets wireless devices"},ans:["C"]},
+      {q:"Which of the following can be used to detect ongoing DoS attacks?",opts:{A:"Antivirus software",B:"Traffic monitoring tools like Wireshark or IDS",C:"DNS caching tools",D:"File integrity monitoring tools"},ans:["B"]},
+      {q:"What is the primary motivation behind some DoS attacks?",opts:{A:"Software updates",B:"Financial gain, extortion, or protest",C:"System backups",D:"OS upgrades"},ans:["B"]},
+      {q:"Which of the following best describes a logic bomb used for DoS purposes?",opts:{A:"A worm that spreads rapidly",B:"A script that activates under specific conditions to disrupt services",C:"A Trojan used to control IoT devices",D:"A virus that mimics a bootloader"},ans:["B"]},
+      {q:"What does the term 'Amplification' refer to in DDoS attacks?",opts:{A:"Spreading the attack via email",B:"Exploiting a service to send larger responses to the victim",C:"Using audio signals to attack devices",D:"Multiplying TCP segments"},ans:["B"]},
+      {q:"Which of the following is NOT a symptom of a DoS attack?",opts:{A:"Slow network performance",B:"Inability to access a website",C:"Unauthorized file access",D:"Server crashes"},ans:["C"]},
+      {q:"Which cloud-based solution helps protect against large-scale DDoS attacks?",opts:{A:"Dropbox",B:"Cloudflare",C:"Wireshark",D:"GitHub"},ans:["B"]},
+      {q:"What is the role of an Intrusion Detection System (IDS) in DoS mitigation?",opts:{A:"Physically blocks the attack source",B:"Detects abnormal traffic patterns for alerts",C:"Encrypts data in transit",D:"Conducts system updates"},ans:["B"]},
+      {q:"How does TCP three-way handshake abuse contribute to DoS attacks?",opts:{A:"It prevents IP filtering",B:"It allows payload injection",C:"It leaves the connection half-open to exhaust server resources",D:"It speeds up transmission"},ans:["C"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod11',
+    name: 'Module 11: Session Hijacking',
+    questions: [
+      {q:"What is session hijacking?",opts:{A:"Interrupting a TCP connection to scan ports",B:"Taking over a user's active session",C:"Replaying DNS queries",D:"Performing a DoS on an application"},ans:["B"]},
+      {q:"Which protocol is commonly targeted during session hijacking due to lack of encryption?",opts:{A:"HTTPS",B:"SSH",C:"Telnet",D:"SFTP"},ans:["C"]},
+      {q:"Which of the following tools can be used for HTTP session hijacking?",opts:{A:"Wireshark",B:"Ettercap",C:"Cain & Abel",D:"All of the above"},ans:["D"]},
+      {q:"What type of attack uses a valid session token to impersonate a user?",opts:{A:"Session fixation",B:"IP spoofing",C:"XSS attack",D:"MITM attack"},ans:["A"]},
+      {q:"Which technique allows an attacker to monitor a session and then take it over?",opts:{A:"Brute force",B:"Sniffing",C:"Scanning",D:"Enumeration"},ans:["B"]},
+      {q:"Which command-line tool can be used to monitor and hijack active network sessions?",opts:{A:"Netcat",B:"hping3",C:"Hunt",D:"Nikto"},ans:["C"]},
+      {q:"Which type of session hijacking occurs after authentication is completed?",opts:{A:"Active session hijacking",B:"Passive session hijacking",C:"Pre-authentication attack",D:"Static session analysis"},ans:["A"]},
+      {q:"What is the primary method for protecting against session hijacking?",opts:{A:"Encrypting session data using HTTPS",B:"Disabling cookies",C:"Increasing session timeout",D:"Allowing anonymous browsing"},ans:["A"]},
+      {q:"Which vulnerability can allow session hijacking via reflected input?",opts:{A:"SQL injection",B:"XSS",C:"CSRF",D:"Clickjacking"},ans:["B"]},
+      {q:"What is the role of session tokens in web sessions?",opts:{A:"Manage server load",B:"Prevent bot attacks",C:"Authenticate and track users across requests",D:"Encrypt traffic"},ans:["C"]},
+      {q:"What should happen to session tokens after logout?",opts:{A:"They remain valid for later use",B:"They are reused for performance",C:"They are destroyed or invalidated",D:"They are stored in DNS"},ans:["C"]},
+      {q:"What is the risk of predictable session IDs?",opts:{A:"They enable SQL injection",B:"They allow session guessing and hijacking",C:"They bypass login forms",D:"They crash the server"},ans:["B"]},
+      {q:"Which type of session hijacking occurs without the victim's knowledge?",opts:{A:"Active",B:"Silent",C:"Passive",D:"Bruteforce"},ans:["C"]},
+      {q:"How can secure cookie attributes help prevent session hijacking?",opts:{A:"By storing the cookies longer",B:"By allowing them to be read by JavaScript",C:"By marking them as HTTPOnly and Secure",D:"By disabling their expiration"},ans:["C"]},
+      {q:"Which HTTP header helps protect against session hijacking via XSS?",opts:{A:"X-Forwarded-For",B:"Strict-Transport-Security",C:"Content-Encoding",D:"Cache-Control"},ans:["B"]},
+      {q:"What does session replay involve?",opts:{A:"Playing recorded audio during a session",B:"Reusing a previously captured session token",C:"Encrypting a live session",D:"Spoofing DNS entries"},ans:["B"]},
+      {q:"What is the typical impact of successful session hijacking?",opts:{A:"Unauthenticated access to resources",B:"Increased bandwidth usage",C:"OS crashes",D:"DNS amplification"},ans:["A"]},
+      {q:"Which scenario could lead to session fixation?",opts:{A:"User input is not validated",B:"Session tokens are set before authentication",C:"Server sends too many cookies",D:"SSL certificates are expired"},ans:["B"]},
+      {q:"What role does ARP spoofing play in session hijacking?",opts:{A:"It blocks TCP ports",B:"It allows the attacker to redirect traffic through their machine",C:"It disables DNS resolution",D:"It floods MAC address tables"},ans:["B"]},
+      {q:"What is the best practice to prevent session hijacking over public Wi-Fi?",opts:{A:"Use FTP instead of HTTP",B:"Avoid firewalls",C:"Use VPN and HTTPS",D:"Use weak encryption for speed"},ans:["C"]},
+      {q:"Which of the following helps detect unauthorized session usage?",opts:{A:"Brute-force detection",B:"Session timeout settings",C:"Geo-IP and device fingerprinting",D:"Cookie obfuscation"},ans:["C"]},
+      {q:"What is the danger of storing session IDs in URLs?",opts:{A:"They can be stored in browser history or logs",B:"They use too much memory",C:"They delay request handling",D:"They cause race conditions"},ans:["A"]},
+      {q:"Why is HTTPS essential in preventing session hijacking?",opts:{A:"It removes session cookies automatically",B:"It increases latency to hide activity",C:"It encrypts data in transit including session tokens",D:"It disables cookies"},ans:["C"]},
+      {q:"Which attack allows a hacker to hijack a session through a wireless AP?",opts:{A:"Evil twin attack",B:"DNS poisoning",C:"Ransomware injection",D:"SQL fuzzing"},ans:["A"]},
+    ]
+  },
+  {
+    id: 'mod12',
+    name: 'Module 12: Evading IDS, Firewalls, and Honeypots',
+    questions: [
+      {q:"What is the purpose of an Intrusion Detection System (IDS)?",opts:{A:"To encrypt data at rest",B:"To detect and alert on unauthorized network activity",C:"To prevent system boot failures",D:"To manage firewall rules automatically"},ans:["B"]},
+      {q:"Which of the following best describes a signature-based IDS?",opts:{A:"It uses AI to block unknown threats",B:"It detects attacks based on known patterns",C:"It learns user behavior over time",D:"It uses port mirroring to block traffic"},ans:["B"]},
+      {q:"What is a common method used to evade signature-based IDS?",opts:{A:"Obfuscating payloads",B:"Using a VPN",C:"Updating antivirus software",D:"Rebooting the IDS"},ans:["A"]},
+      {q:"What is the primary role of a firewall?",opts:{A:"Encrypt network traffic",B:"Analyze malware in sandboxes",C:"Control incoming and outgoing network traffic",D:"Store credentials securely"},ans:["C"]},
+      {q:"Which technique involves breaking an attack payload into smaller pieces to avoid detection?",opts:{A:"Port scanning",B:"Packet fragmentation",C:"Banner grabbing",D:"Credential stuffing"},ans:["B"]},
+      {q:"What is a honeypot used for?",opts:{A:"Accelerate data transfer",B:"Lure and analyze attacker behavior",C:"Serve as a backup DNS server",D:"Prevent brute-force attacks on firewalls"},ans:["B"]},
+      {q:"How does protocol tunneling help evade firewalls?",opts:{A:"Encrypts data at rest",B:"Disguises traffic as legitimate protocols",C:"Blocks all outbound traffic",D:"Replaces packet headers with random values"},ans:["B"]},
+      {q:"What is the purpose of polymorphic shellcode?",opts:{A:"It slows down antivirus scans",B:"It changes its code while maintaining functionality to avoid detection",C:"It encrypts all communication with the C2 server",D:"It stores payloads in registry keys"},ans:["B"]},
+      {q:"Which firewall evasion technique manipulates IP packet flags?",opts:{A:"TCP ACK scan",B:"XMAS scan",C:"SYN-ACK flooding",D:"TTL manipulation"},ans:["B"]},
+      {q:"How can attackers use encrypted traffic to evade IDS detection?",opts:{A:"By scanning unencrypted payloads",B:"By avoiding ports above 1024",C:"By using SSL/TLS to hide malicious payloads",D:"By limiting packets to 64 bytes"},ans:["C"]},
+      {q:"Which tool is often used to test firewall and IDS evasion techniques?",opts:{A:"Metasploit",B:"Burp Suite",C:"Netcat",D:"Shodan"},ans:["A"]},
+      {q:"What does the term 'false positive' mean in IDS context?",opts:{A:"Attack missed by the IDS",B:"Legitimate activity flagged as malicious",C:"Duplicate log entries",D:"Traffic blocked without inspection"},ans:["B"]},
+      {q:"What is the main risk of tuning an IDS too strictly?",opts:{A:"It will ignore encrypted traffic",B:"It can crash the network switch",C:"It may allow attacks to go undetected",D:"It increases false positives"},ans:["D"]},
+      {q:"How can attackers avoid triggering honeypots?",opts:{A:"By only attacking during business hours",B:"By scanning for default honeypot banners",C:"By using non-standard port ranges",D:"By encrypting all packets"},ans:["B"]},
+      {q:"Which of the following is a behavior-based IDS system?",opts:{A:"Snort",B:"Suricata",C:"OSSEC",D:"Bro/Zeek"},ans:["D"]},
+      {q:"Which IDS evasion technique delays the sending of packets?",opts:{A:"Packet splitting",B:"Fragmentation",C:"Time-based evasion",D:"Reverse DNS spoofing"},ans:["C"]},
+      {q:"What is the purpose of reverse shell encoding?",opts:{A:"Encrypt network traffic",B:"Obfuscate the payload to bypass IDS",C:"Increase shell reliability",D:"Block traffic to remote hosts"},ans:["B"]},
+      {q:"Why is outbound firewall rule monitoring important?",opts:{A:"It blocks incoming port scans",B:"It prevents users from uploading files",C:"It can detect data exfiltration attempts",D:"It disables packet sniffing"},ans:["C"]},
+      {q:"Which type of firewall operates at the application layer?",opts:{A:"Packet-filtering firewall",B:"Circuit-level gateway",C:"Stateful inspection firewall",D:"Proxy firewall"},ans:["D"]},
+      {q:"Which of the following can help detect honeypots?",opts:{A:"High response latency",B:"Closed outbound connections",C:"Excessive logging behavior",D:"All of the above"},ans:["D"]},
+      {q:"What is the function of a stateful firewall?",opts:{A:"It encrypts all session data",B:"It blocks ICMP packets",C:"It keeps track of active connections",D:"It logs all DNS requests"},ans:["C"]},
+      {q:"Which IDS evasion technique uses encoding variations to hide attacks?",opts:{A:"Base64 encoding",B:"URL encoding",C:"Unicode encoding",D:"All of the above"},ans:["D"]},
+      {q:"What can an attacker learn by fingerprinting an IDS?",opts:{A:"The public IP address",B:"Specific signatures used",C:"DNS record history",D:"Firewall version number"},ans:["B"]},
+      {q:"Which protocol is often abused for evading firewalls via tunneling?",opts:{A:"HTTP",B:"ICMP",C:"FTP",D:"POP3"},ans:["B"]},
+    ]
+  },
+  {
+    id: 'mod13',
+    name: 'Module 13: Hacking Web Servers',
+    questions: [
+      {q:"Which of the following is a common vulnerability found in web servers?",opts:{A:"Cross-Site Request Forgery",B:"Open Redirect",C:"Directory Traversal",D:"Clickjacking"},ans:["C"]},
+      {q:"What tool can be used to fingerprint web servers?",opts:{A:"Nikto",B:"Nmap",C:"Wappalyzer",D:"All of the above"},ans:["D"]},
+      {q:"Which HTTP method could allow unauthorized file uploads if not properly secured?",opts:{A:"GET",B:"POST",C:"HEAD",D:"TRACE"},ans:["B"]},
+      {q:"What is the primary goal of exploiting a web server vulnerability?",opts:{A:"To fingerprint the operating system",B:"To obtain unauthorized access or disrupt service",C:"To extract DNS records",D:"To sniff traffic from client devices"},ans:["B"]},
+      {q:"Which tool is specifically designed to identify vulnerabilities in web servers?",opts:{A:"John the Ripper",B:"Aircrack-ng",C:"Nikto",D:"Hydra"},ans:["C"]},
+      {q:"What is the function of the 'Server' header in HTTP responses?",opts:{A:"Encrypt the payload",B:"Indicate server software and version",C:"Control session cookies",D:"Block unauthorized access"},ans:["B"]},
+      {q:"Which attack involves manipulating a web server to access restricted directories?",opts:{A:"Clickjacking",B:"Directory Traversal",C:"XSS",D:"Session Hijacking"},ans:["B"]},
+      {q:"Why is it risky to leave default configurations on web servers?",opts:{A:"It reduces performance",B:"It increases bandwidth usage",C:"It exposes known vulnerabilities",D:"It logs too much information"},ans:["C"]},
+      {q:"Which HTTP method is often disabled to prevent enumeration of server functions?",opts:{A:"GET",B:"POST",C:"OPTIONS",D:"HEAD"},ans:["C"]},
+      {q:"Which scanning tool can detect outdated server software and misconfigurations?",opts:{A:"Metasploit",B:"Nikto",C:"Burp Suite",D:"Netcat"},ans:["B"]},
+      {q:"Which directory structure is commonly targeted in web server attacks?",opts:{A:"/var/log",B:"/etc/",C:"/var/www",D:"/boot"},ans:["C"]},
+      {q:"What role does the web root directory play in a web server?",opts:{A:"Stores DNS configurations",B:"Hosts system logs",C:"Contains files accessible over HTTP",D:"Acts as the kernel boot partition"},ans:["C"]},
+      {q:"What is the purpose of server-side input validation?",opts:{A:"To speed up page loading",B:"To block malware downloads",C:"To prevent injection attacks",D:"To optimize DNS queries"},ans:["C"]},
+      {q:"Which HTTP header can help prevent information disclosure?",opts:{A:"Cache-Control",B:"Server",C:"X-Content-Type-Options",D:"Allow"},ans:["C"]},
+      {q:"Which of the following can indicate the presence of a vulnerable web server?",opts:{A:"Lack of SSL certificate",B:"Server disclosing software version",C:"Large favicon.ico file",D:"HTML pages without CSS"},ans:["B"]},
+      {q:"Which command-line tool can test for banner grabbing on a web server?",opts:{A:"curl",B:"ifconfig",C:"traceroute",D:"ping"},ans:["A"]},
+      {q:"How does a 'web defacement' attack affect a web server?",opts:{A:"Slows down traffic",B:"Replaces legitimate content with unauthorized content",C:"Blocks DNS queries",D:"Deletes database tables"},ans:["B"]},
+      {q:"Which of the following practices enhances web server security?",opts:{A:"Enable directory browsing",B:"Disable logging",C:"Regularly apply patches and updates",D:"Allow remote root login"},ans:["C"]},
+      {q:"What is a virtual host in the context of web servers?",opts:{A:"A host with limited network access",B:"A simulated host used for training",C:"A method to host multiple websites on a single server",D:"A DNS sinkhole"},ans:["C"]},
+      {q:"Which protocol is typically used by web servers to serve encrypted content?",opts:{A:"FTP",B:"HTTP",C:"HTTPS",D:"SSH"},ans:["C"]},
+      {q:"Which file might expose sensitive server configuration settings if accessible?",opts:{A:"robots.txt",B:"config.php",C:"favicon.ico",D:"sitemap.xml"},ans:["B"]},
+      {q:"What is the risk of running a web server as the root user?",opts:{A:"It prevents directory traversal",B:"It ensures sandboxing of services",C:"It gives attackers full system control if compromised",D:"It improves compatibility with SSL"},ans:["C"]},
+      {q:"Which HTTP status code indicates unauthorized access?",opts:{A:"200",B:"403",C:"302",D:"500"},ans:["B"]},
+      {q:"Which web server software is open-source and widely used?",opts:{A:"Microsoft IIS",B:"Apache HTTP Server",C:"WebSphere",D:"NGINX Plus"},ans:["B"]},
+      {q:"What is the benefit of disabling directory listing on a web server?",opts:{A:"Prevents packet fragmentation",B:"Hides the contents of directories from attackers",C:"Encrypts HTTP responses",D:"Speeds up DNS resolution"},ans:["B"]},
+    ]
+  },
+  {
+    id: 'mod14',
+    name: 'Module 14: Hacking Web Applications',
+    questions: [
+      {q:"Which of the following is a common web application vulnerability?",opts:{A:"SYN flood",B:"Cross-Site Scripting (XSS)",C:"Smurf attack",D:"MAC flooding"},ans:["B"]},
+      {q:"What is the purpose of input validation in web applications?",opts:{A:"To increase response time",B:"To prevent malicious input from being processed",C:"To encrypt traffic",D:"To block file downloads"},ans:["B"]},
+      {q:"Which tool is commonly used to test web applications for vulnerabilities?",opts:{A:"Burp Suite",B:"Aircrack-ng",C:"Nmap",D:"Wireshark"},ans:["A"]},
+      {q:"What type of vulnerability allows an attacker to execute scripts in a victim's browser?",opts:{A:"SQL Injection",B:"XSS",C:"Command Injection",D:"SSRF"},ans:["B"]},
+      {q:"What is the result of a successful Cross-Site Request Forgery (CSRF) attack?",opts:{A:"Theft of data from the server",B:"Execution of unauthorized actions on behalf of a user",C:"Crashing the server application",D:"Injecting malware into memory"},ans:["B"]},
+      {q:"Which HTTP header can help mitigate XSS attacks?",opts:{A:"X-Frame-Options",B:"X-Content-Type-Options",C:"Content-Security-Policy",D:"Server"},ans:["C"]},
+      {q:"What is the primary danger of SQL Injection in a web application?",opts:{A:"Resource exhaustion",B:"Privilege escalation",C:"Unauthorized access to database contents",D:"Cookie manipulation"},ans:["C"]},
+      {q:"What does session fixation allow an attacker to do?",opts:{A:"Hijack a session by setting a predefined session ID",B:"Block a session from starting",C:"Increase session timeout",D:"Disable cookies"},ans:["A"]},
+      {q:"Which attack vector involves inserting malicious SQL code into form fields?",opts:{A:"XSS",B:"LFI",C:"CSRF",D:"SQL Injection"},ans:["D"]},
+      {q:"Which web vulnerability exploits insecure file inclusion methods?",opts:{A:"RFI",B:"XSS",C:"CSRF",D:"DNS Spoofing"},ans:["A"]},
+      {q:"Which OWASP category includes issues like SQL Injection and XSS?",opts:{A:"Broken Access Control",B:"Security Misconfiguration",C:"Injection",D:"Broken Authentication"},ans:["C"]},
+      {q:"Which of the following can prevent SQL Injection?",opts:{A:"Disabling cookies",B:"Parameterized queries",C:"Increasing firewall logs",D:"Adding more database indexes"},ans:["B"]},
+      {q:"Which component of Burp Suite allows intercepting and modifying HTTP requests?",opts:{A:"Repeater",B:"Intruder",C:"Scanner",D:"Proxy"},ans:["D"]},
+      {q:"What is the purpose of web application firewalls (WAF)?",opts:{A:"Prevent unauthorized network access",B:"Detect and block web-based attacks",C:"Encrypt HTTPS traffic",D:"Log wireless activity"},ans:["B"]},
+      {q:"Which file might contain sensitive application credentials if not secured properly?",opts:{A:"favicon.ico",B:".env",C:"sitemap.xml",D:"robots.txt"},ans:["B"]},
+      {q:"What is Clickjacking?",opts:{A:"Altering links to download malware",B:"Tricking users into clicking invisible elements",C:"Hijacking user sessions",D:"Tracking user behavior through ads"},ans:["B"]},
+      {q:"Which framework helps identify the top web application risks?",opts:{A:"MITRE ATT&CK",B:"OWASP",C:"PCI DSS",D:"NIST"},ans:["B"]},
+      {q:"What can an attacker accomplish with a successful LFI attack?",opts:{A:"Deface a website",B:"Access files on the server",C:"Scan ports",D:"Capture network packets"},ans:["B"]},
+      {q:"What is a common indicator of insecure authentication in web applications?",opts:{A:"Login via HTTPS",B:"Password stored in cookies",C:"CAPTCHA protection",D:"Rate limiting login attempts"},ans:["B"]},
+      {q:"How can content security policy (CSP) enhance application security?",opts:{A:"By preventing cross-origin access to resources",B:"By encrypting cookies",C:"By hashing passwords",D:"By improving compression"},ans:["A"]},
+      {q:"What does the SameSite cookie attribute help prevent?",opts:{A:"Clickjacking",B:"CSRF attacks",C:"SQL Injection",D:"Brute-force login attempts"},ans:["B"]},
+      {q:"Which tool can automatically scan web apps for vulnerabilities?",opts:{A:"ZAP",B:"John the Ripper",C:"Ettercap",D:"Aircrack-ng"},ans:["A"]},
+      {q:"What does a 500 Internal Server Error indicate?",opts:{A:"File not found",B:"Permission denied",C:"Server misconfiguration or failure",D:"Authentication required"},ans:["C"]},
+      {q:"What is the primary goal of web application pentesting?",opts:{A:"Take down the web server",B:"Validate SSL certificates",C:"Identify and exploit vulnerabilities",D:"Improve site aesthetics"},ans:["C"]},
+      {q:"Which technique allows a hacker to impersonate a trusted user via a forged session?",opts:{A:"Broken Authentication",B:"XSS",C:"CSRF",D:"Session Hijacking"},ans:["D"]},
+    ]
+  },
+  {
+    id: 'mod15',
+    name: 'Module 15: SQL Injection',
+    questions: [
+      {q:"What is the primary goal of a SQL injection attack?",opts:{A:"To slow down the database server",B:"To gain unauthorized access to the database",C:"To increase network latency",D:"To encrypt the database with ransomware"},ans:["B"]},
+      {q:"Which character is commonly used to initiate a SQL injection?",opts:{A:"@",B:"#",C:"'",D:"&"},ans:["C"]},
+      {q:"Which of the following tools can be used to automate SQL injection testing?",opts:{A:"sqlmap",B:"John the Ripper",C:"Hydra",D:"Ettercap"},ans:["A"]},
+      {q:"Which SQL command is commonly used to extract data from a table?",opts:{A:"GET",B:"SELECT",C:"RETRIEVE",D:"SHOW"},ans:["B"]},
+      {q:"Which of the following best prevents SQL injection?",opts:{A:"Using firewalls",B:"Disabling cookies",C:"Parameterized queries",D:"Hiding the database"},ans:["C"]},
+      {q:"What type of SQL injection returns results directly to the attacker's browser?",opts:{A:"Blind SQL injection",B:"Time-based SQL injection",C:"Error-based SQL injection",D:"Union-based SQL injection"},ans:["D"]},
+      {q:"Which HTTP method is most likely used in SQL injection through forms?",opts:{A:"GET",B:"PUT",C:"POST",D:"DELETE"},ans:["C"]},
+      {q:"What is a sign of a potential SQL injection vulnerability?",opts:{A:"Slow web page loading",B:"404 errors",C:"Database error messages in the browser",D:"Redirect loops"},ans:["C"]},
+      {q:"Which clause can be abused to combine results from multiple queries in an SQL injection?",opts:{A:"JOIN",B:"UNION",C:"HAVING",D:"COUNT"},ans:["B"]},
+      {q:"Which database function is often used to identify the version of the database?",opts:{A:"DB_VERSION()",B:"GET_VERSION()",C:"@@VERSION",D:"DATABASE_VER()"},ans:["C"]},
+      {q:"Which type of SQL injection relies on database delays to infer data?",opts:{A:"Error-based",B:"Union-based",C:"Time-based blind",D:"Boolean-based blind"},ans:["C"]},
+      {q:"Which of the following is a boolean-based SQL injection payload?",opts:{A:"' OR 1=1 --",B:"'; DROP TABLE users --",C:"' UNION SELECT null, null --",D:"' WAITFOR DELAY '0:0:5' --"},ans:["A"]},
+      {q:"Which web application security testing tool includes a SQL injection scanner?",opts:{A:"Nmap",B:"Burp Suite",C:"Wireshark",D:"Cain & Abel"},ans:["B"]},
+      {q:"What is the impact of a successful SQL injection attack?",opts:{A:"Denial of service",B:"Unauthorized data access or manipulation",C:"Network traffic sniffing",D:"Firewall evasion"},ans:["B"]},
+      {q:"In SQL injection, which operator is commonly used in conditional logic?",opts:{A:"=",B:"+",C:"*",D:"&"},ans:["A"]},
+      {q:"What is the role of the 'LIMIT' clause in SQL?",opts:{A:"To encrypt data",B:"To restrict the number of rows returned",C:"To count table rows",D:"To filter IP addresses"},ans:["B"]},
+      {q:"Which of the following is an example of a tautology used in SQL injection?",opts:{A:"' AND 1=2 --",B:"' OR 'abc'='xyz",C:"' OR '1'='1",D:"' DROP TABLE admin --"},ans:["C"]},
+      {q:"Which of these is a safe practice to prevent SQL injection?",opts:{A:"Disable HTTPS",B:"Use unsanitized user input",C:"Use stored procedures with validation",D:"Allow error messages to be displayed"},ans:["C"]},
+      {q:"Which statement is true about blind SQL injection?",opts:{A:"It does not show any error messages or data output",B:"It crashes the server",C:"It relies on HTML injection",D:"It only works with MySQL"},ans:["A"]},
+      {q:"How can a web developer protect against SQL injection in login forms?",opts:{A:"Use HTML5 autocomplete",B:"Avoid using forms",C:"Use prepared statements",D:"Limit input to 100 characters"},ans:["C"]},
+      {q:"Which of these is an indication of SQL injection during testing?",opts:{A:"Redirect to HTTPS",B:"Application responds with database error messages",C:"Login page loads slowly",D:"CAPTCHA failure"},ans:["B"]},
+      {q:"What is the role of the 'WHERE' clause in a SQL query?",opts:{A:"To sort data",B:"To join tables",C:"To filter rows based on condition",D:"To set user permissions"},ans:["C"]},
+      {q:"What does the following payload attempt to do: ' OR 1=1 -- ?",opts:{A:"Log the user out",B:"Check database version",C:"Bypass authentication",D:"Perform brute-force login"},ans:["C"]},
+      {q:"Which database management system is most commonly targeted in SQL injection attacks?",opts:{A:"Redis",B:"MongoDB",C:"MySQL",D:"SQLite"},ans:["C"]},
+      {q:"What happens when an application fails to sanitize input?",opts:{A:"It disables SSL",B:"It becomes susceptible to SQL injection",C:"It blocks database access",D:"It triggers firewall alerts"},ans:["B"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod16',
+    name: 'Module 16: Hacking Wireless Networks',
+    questions: [
+      {q:"Which wireless encryption standard is considered the most secure today?",opts:{A:"WEP",B:"WPA",C:"WPA2",D:"WPA3"},ans:["D"]},
+      {q:"What tool is commonly used for wireless network auditing?",opts:{A:"Cain & Abel",B:"Aircrack-ng",C:"Nmap",D:"Nikto"},ans:["B"]},
+      {q:"Which frequency band is used by most 802.11n devices?",opts:{A:"900 MHz",B:"2.4 GHz",C:"3.6 GHz",D:"6 GHz"},ans:["B"]},
+      {q:"What is the role of a wireless access point (AP)?",opts:{A:"Translates public IP to private IP",B:"Routes packets over the Internet",C:"Acts as a bridge between wired and wireless networks",D:"Encrypts all outgoing data"},ans:["C"]},
+      {q:"Which attack involves intercepting packets from a wireless network?",opts:{A:"Replay attack",B:"Packet sniffing",C:"Brute force",D:"MAC flooding"},ans:["B"]},
+      {q:"Which mode in Wi-Fi is typically used to connect clients directly without an AP?",opts:{A:"Infrastructure mode",B:"Monitor mode",C:"Ad-hoc mode",D:"Bridge mode"},ans:["C"]},
+      {q:"What is the main weakness of WEP encryption?",opts:{A:"It uses dynamic keys",B:"It's too expensive to deploy",C:"It uses a static key vulnerable to cracking",D:"It doesn't allow roaming"},ans:["C"]},
+      {q:"Which tool is part of the Aircrack-ng suite for capturing packets?",opts:{A:"airodump-ng",B:"nmap",C:"Wireshark",D:"metasploit"},ans:["A"]},
+      {q:"What is a deauthentication attack used for?",opts:{A:"To connect to an AP",B:"To cause a denial of service on a Wi-Fi network",C:"To hide SSIDs",D:"To spoof DNS responses"},ans:["B"]},
+      {q:"What is the purpose of the handshake in WPA/WPA2?",opts:{A:"To allocate bandwidth",B:"To authenticate clients",C:"To encrypt SSIDs",D:"To route packets"},ans:["B"]},
+      {q:"Which antenna type focuses signals in a single direction?",opts:{A:"Omnidirectional",B:"Dipole",C:"Yagi",D:"Parabolic"},ans:["C"]},
+      {q:"What is the default port for RADIUS authentication commonly used in enterprise Wi-Fi?",opts:{A:"80",B:"443",C:"1812",D:"21"},ans:["C"]},
+      {q:"Which of the following is a method to secure a wireless network?",opts:{A:"Enable MAC filtering",B:"Use WEP encryption",C:"Hide SSID",D:"Enable DHCP"},ans:["A"]},
+      {q:"What kind of attack involves cloning an AP to trick users into connecting?",opts:{A:"Evil twin",B:"Wardriving",C:"MAC spoofing",D:"Rogue DHCP"},ans:["A"]},
+      {q:"Which protocol is commonly used for wireless encryption in WPA2?",opts:{A:"RC4",B:"AES",C:"DES",D:"Blowfish"},ans:["B"]},
+      {q:"What does SSID stand for?",opts:{A:"Secure Set Identifier",B:"Subnet Signal Identifier",C:"Service Set Identifier",D:"Station Security Identifier"},ans:["C"]},
+      {q:"Which of the following is a legal use of Wi-Fi hacking tools?",opts:{A:"Penetration testing with client permission",B:"Connecting to open networks without consent",C:"Cracking neighbor's Wi-Fi",D:"Performing man-in-the-middle attacks on public Wi-Fi"},ans:["A"]},
+      {q:"Which 802.11 standard provides speeds up to 600 Mbps?",opts:{A:"802.11b",B:"802.11g",C:"802.11n",D:"802.11a"},ans:["C"]},
+      {q:"What is war driving?",opts:{A:"Driving hardware at high CPU",B:"Searching for wireless networks while moving",C:"Crashing wireless routers",D:"Injecting fake SSIDs"},ans:["B"]},
+      {q:"What can be used to prevent rogue devices from accessing Wi-Fi?",opts:{A:"MAC address filtering",B:"Enabling DHCP",C:"Disabling HTTPS",D:"Port scanning"},ans:["A"]},
+      {q:"Which channel is non-overlapping in the 2.4 GHz band?",opts:{A:"Channel 4",B:"Channel 6",C:"Channel 10",D:"Channel 13"},ans:["B"]},
+      {q:"What does WPA3 offer over WPA2?",opts:{A:"Weaker encryption",B:"Backward compatibility with WEP",C:"Better protection against brute-force attacks",D:"No authentication at all"},ans:["C"]},
+      {q:"What is a hidden SSID?",opts:{A:"A network with MAC filtering",B:"A Wi-Fi network without password",C:"A network that does not broadcast its name",D:"A public hotspot"},ans:["C"]},
+      {q:"Which term describes capturing traffic for analysis on a Wi-Fi network?",opts:{A:"Tunneling",B:"Sniffing",C:"Spoofing",D:"Flooding"},ans:["B"]},
+      {q:"Which tool is used for Wi-Fi packet injection?",opts:{A:"hping3",B:"ettercap",C:"aireplay-ng",D:"sqlmap"},ans:["C"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod17',
+    name: 'Module 17: Hacking Mobile Platforms',
+    questions: [
+      {q:"Which of the following is a common mobile malware distribution method?",opts:{A:"USB drives",B:"Drive-by downloads",C:"CD-ROMs",D:"BIOS updates"},ans:["B"]},
+      {q:"What is rooting in Android devices?",opts:{A:"Factory reset",B:"Updating the OS",C:"Gaining administrative privileges",D:"Locking the bootloader"},ans:["C"]},
+      {q:"Which permission allows a mobile app to read SMS messages?",opts:{A:"READ_PHONE_STATE",B:"RECEIVE_BOOT_COMPLETED",C:"READ_SMS",D:"ACCESS_FINE_LOCATION"},ans:["C"]},
+      {q:"What is jailbreaking on iOS?",opts:{A:"Locking down an iOS device",B:"Gaining root access to remove Apple's restrictions",C:"Resetting the Apple ID",D:"Unlocking carrier restrictions"},ans:["B"]},
+      {q:"Which tool can analyze mobile app security for Android?",opts:{A:"MobSF",B:"Aircrack-ng",C:"Hydra",D:"Nmap"},ans:["A"]},
+      {q:"What is a key concern when using public mobile charging stations?",opts:{A:"Battery overheating",B:"Juice jacking",C:"Data throttling",D:"Network spoofing"},ans:["B"]},
+      {q:"Which protocol is typically used to sync mobile email apps?",opts:{A:"FTP",B:"IMAP",C:"Telnet",D:"NTP"},ans:["B"]},
+      {q:"Which of the following is a mobile device management (MDM) function?",opts:{A:"Encrypting website traffic",B:"Remote wipe",C:"DNS resolution",D:"Decrypting TLS packets"},ans:["B"]},
+      {q:"Which app store policy helps reduce mobile malware?",opts:{A:"No free apps",B:"Mandatory code signing",C:"Unlimited data access",D:"Public APIs"},ans:["B"]},
+      {q:"What is a common attack on mobile devices using rogue cell towers?",opts:{A:"Packet sniffing",B:"SSID spoofing",C:"IMSI catching",D:"ARP poisoning"},ans:["C"]},
+      {q:"What can an attacker do after gaining root access to a mobile device?",opts:{A:"Change the IMEI",B:"Increase battery life",C:"Access encrypted DNS",D:"Block physical SIM card"},ans:["A"]},
+      {q:"Which component verifies app authenticity in Android?",opts:{A:"PackageManager",B:"ART",C:"APK Validator",D:"Signature verification"},ans:["D"]},
+      {q:"Which of these is a secure mobile app development practice?",opts:{A:"Storing credentials in plaintext",B:"Using hardcoded encryption keys",C:"Validating inputs and outputs",D:"Logging sensitive data"},ans:["C"]},
+      {q:"Which Android file contains app permissions?",opts:{A:"build.gradle",B:"AndroidManifest.xml",C:"strings.xml",D:"MainActivity.java"},ans:["B"]},
+      {q:"What is the goal of mobile application reverse engineering?",opts:{A:"Improving UX design",B:"Discovering sensitive logic or credentials",C:"Testing battery drain",D:"Generating SSL certificates"},ans:["B"]},
+      {q:"What is a common risk when sideloading apps on Android?",opts:{A:"Performance drop",B:"Security updates",C:"Installing malicious apps",D:"Poor Wi-Fi reception"},ans:["C"]},
+      {q:"Which of these mobile OSs is more open to source-level modifications?",opts:{A:"iOS",B:"Android",C:"Windows Phone",D:"BlackBerry OS"},ans:["B"]},
+      {q:"Which tool helps analyze iOS app binaries?",opts:{A:"Radare2",B:"Ghidra",C:"Hopper",D:"IDA Pro"},ans:["C"]},
+      {q:"What does an MDM solution typically enforce?",opts:{A:"DNS filtering",B:"App whitelisting and password policies",C:"Email archiving",D:"CPU usage limits"},ans:["B"]},
+      {q:"What does two-factor authentication add to mobile login security?",opts:{A:"Encryption",B:"Faster logins",C:"A second layer of identity verification",D:"Device mirroring"},ans:["C"]},
+      {q:"What is a benefit of mobile app sandboxing?",opts:{A:"Decreased startup time",B:"Prevents apps from accessing each other's data",C:"Faster network speeds",D:"Open memory allocation"},ans:["B"]},
+      {q:"Which of the following is considered a threat to mobile app security?",opts:{A:"HTTPS",B:"Insecure data storage",C:"Bluetooth pairing",D:"Camera usage"},ans:["B"]},
+      {q:"Which mobile platform feature restricts installation of unknown apps?",opts:{A:"Google Assistant",B:"Secure Boot",C:"Play Protect",D:"App Ops"},ans:["C"]},
+      {q:"What type of malware sends premium SMS messages without user consent?",opts:{A:"Adware",B:"Spyware",C:"Ransomware",D:"SMS trojan"},ans:["D"]},
+      {q:"Which of the following techniques is used to analyze app behavior in a controlled environment?",opts:{A:"Static analysis",B:"Packet crafting",C:"Dynamic analysis",D:"Port scanning"},ans:["C"]},
+    ]
+  }
+  ,
+  {
+    id: 'mod18',
+    name: 'Module 18: IoT and OT Hacking',
+    questions: [
+      {q:"Which of the following best describes an IoT device?",opts:{A:"A server with virtualization software",B:"A traditional desktop PC",C:"A smart thermostat connected to the internet",D:"A local-only printer"},ans:["C"]},
+      {q:"Which communication protocol is commonly used in IoT devices?",opts:{A:"SMTP",B:"SNMP",C:"MQTT",D:"FTP"},ans:["C"]},
+      {q:"What is a major challenge in securing IoT environments?",opts:{A:"Low power usage",B:"Frequent firmware updates",C:"Limited processing power and storage",D:"Redundant connectivity"},ans:["C"]},
+      {q:"Which of the following is a common security issue in IoT devices?",opts:{A:"Overclocked CPUs",B:"Hardcoded credentials",C:"Lack of Wi-Fi support",D:"Built-in firewalls"},ans:["B"]},
+      {q:"What is OT in the context of cybersecurity?",opts:{A:"Operational Technology",B:"Online Transactions",C:"Open Tunneling",D:"Optical Transfer"},ans:["A"]},
+      {q:"Which tool is useful for discovering IoT devices on a network?",opts:{A:"sqlmap",B:"Nmap",C:"John the Ripper",D:"Hydra"},ans:["B"]},
+      {q:"What type of attack exploits weak authentication on IoT devices?",opts:{A:"Brute-force attack",B:"Phishing attack",C:"SQL injection",D:"DNS spoofing"},ans:["A"]},
+      {q:"Which SCADA protocol is widely used in OT environments?",opts:{A:"SMB",B:"HTTP",C:"Modbus",D:"ICMP"},ans:["C"]},
+      {q:"What is a common use of OT systems?",opts:{A:"Hosting cloud services",B:"Managing industrial equipment",C:"Sending marketing emails",D:"Rendering web pages"},ans:["B"]},
+      {q:"Which device is considered part of the IoT?",opts:{A:"Cisco router",B:"Smart TV",C:"Desktop PC",D:"External hard drive"},ans:["B"]},
+      {q:"Which attack targets smart home devices to build botnets?",opts:{A:"Ransomware",B:"Mirai",C:"Zeus",D:"Poison Ivy"},ans:["B"]},
+      {q:"What does Shodan help attackers and researchers find?",opts:{A:"Vulnerabilities in web browsers",B:"Devices connected to the internet",C:"Social media credentials",D:"Wireless sniffers"},ans:["B"]},
+      {q:"What is a recommended method to secure IoT firmware?",opts:{A:"Leave it unpatched for stability",B:"Disable TLS",C:"Regularly update it",D:"Use default usernames"},ans:["C"]},
+      {q:"Why is segmentation important in OT networks?",opts:{A:"To improve download speeds",B:"To separate critical infrastructure from IT systems",C:"To allow external VPN access",D:"To host email servers"},ans:["B"]},
+      {q:"Which IoT protocol is often associated with short-range device communication?",opts:{A:"SIP",B:"ICMP",C:"Bluetooth",D:"SMTP"},ans:["C"]},
+      {q:"Which standard helps guide secure development of IoT products?",opts:{A:"PCI DSS",B:"OWASP Top 10 IoT",C:"ISO 9001",D:"ITIL"},ans:["B"]},
+      {q:"What is a PLC in OT environments?",opts:{A:"Portable Login Credential",B:"Process Logic Chart",C:"Programmable Logic Controller",D:"Power Line Carrier"},ans:["C"]},
+      {q:"Which of the following can help mitigate IoT risks?",opts:{A:"Use of default passwords",B:"Open remote management",C:"Regular patching and updates",D:"Disabling logs"},ans:["C"]},
+      {q:"Why are OT devices often left unpatched?",opts:{A:"Updates are too frequent",B:"They lack TCP/IP support",C:"Downtime affects critical operations",D:"Patches require cloud access"},ans:["C"]},
+      {q:"What is a typical impact of OT compromise?",opts:{A:"Loss of emails",B:"Physical process disruption",C:"Cloud service outage",D:"Loss of customer reviews"},ans:["B"]},
+      {q:"Which tool helps fingerprint OT devices?",opts:{A:"Nessus",B:"Wireshark",C:"Censys",D:"Nmap NSE scripts"},ans:["D"]},
+      {q:"Which attack involves exploiting unsecured Telnet access on IoT?",opts:{A:"Brute force",B:"Man-in-the-middle",C:"SQL injection",D:"Port scanning"},ans:["A"]},
+      {q:"Why is default credential usage dangerous in IoT?",opts:{A:"They consume bandwidth",B:"They can be easily guessed or found online",C:"They require frequent resets",D:"They are not encrypted"},ans:["B"]},
+      {q:"Which security control can help detect IoT-based attacks?",opts:{A:"IDS/IPS",B:"VPN tunneling",C:"NAT traversal",D:"Load balancers"},ans:["A"]},
+      {q:"What kind of network segmentation is best for OT devices?",opts:{A:"VLANs with firewalls",B:"Bridged mode",C:"DMZ bypass",D:"Shared switch uplinks"},ans:["A"]},
+    ]
+  },
+  {
+    id: 'mod19',
+    name: 'Module 19: Cloud Computing',
+    questions: [
+      {q:"What is the primary benefit of cloud computing for organizations?",opts:{A:"Increased hardware costs",B:"Limited scalability",C:"On-demand resource availability",D:"Fixed resource allocation"},ans:["C"]},
+      {q:"Which of the following is a common cloud deployment model?",opts:{A:"Hybrid",B:"Clustered",C:"Modular",D:"Virtual"},ans:["A"]},
+      {q:"Which cloud service model provides the highest level of control over resources?",opts:{A:"SaaS",B:"PaaS",C:"IaaS",D:"CaaS"},ans:["C"]},
+      {q:"Which cloud model allows multiple customers to share the same infrastructure?",opts:{A:"Private cloud",B:"Public cloud",C:"Community cloud",D:"Internal cloud"},ans:["B"]},
+      {q:"Which of these is a primary security concern in cloud environments?",opts:{A:"Power outages",B:"Shared tenancy",C:"Low storage capacity",D:"Application crashes"},ans:["B"]},
+      {q:"What is the purpose of a Cloud Access Security Broker (CASB)?",opts:{A:"Encrypt cloud storage",B:"Prevent DDOS attacks",C:"Provide visibility and policy enforcement",D:"Manage cloud billing"},ans:["C"]},
+      {q:"Which term describes a cloud provider's legal responsibility for securing their platform?",opts:{A:"SLA",B:"RTO",C:"Shared responsibility model",D:"MTBF"},ans:["C"]},
+      {q:"Which of the following best defines multitenancy?",opts:{A:"Use of multiple accounts in one cloud service",B:"Storing backups in multiple locations",C:"Hosting multiple users on a shared infrastructure",D:"Having many cloud vendors"},ans:["C"]},
+      {q:"Which service type is exemplified by Google Docs?",opts:{A:"IaaS",B:"SaaS",C:"PaaS",D:"NaaS"},ans:["B"]},
+      {q:"Which security control is essential for cloud-based virtual machines?",opts:{A:"Disabling encryption",B:"Logging out manually",C:"Patching and hardening",D:"Lowering firewall settings"},ans:["C"]},
+      {q:"Which standard focuses on cloud security control implementation?",opts:{A:"PCI DSS",B:"ISO/IEC 27017",C:"HIPAA",D:"NIST SP 800-53"},ans:["B"]},
+      {q:"Which of the following is a cloud-native security risk?",opts:{A:"SQL Injection",B:"Misconfigured storage buckets",C:"Brute-force login",D:"Local privilege escalation"},ans:["B"]},
+      {q:"Which protocol is commonly used for securing API access in cloud applications?",opts:{A:"SMTP",B:"SNMP",C:"OAuth",D:"FTP"},ans:["C"]},
+      {q:"What does the acronym DLP stand for in cloud security?",opts:{A:"Data Loss Prevention",B:"Device Locking Protocol",C:"Data Logging Policy",D:"Digital Layer Protection"},ans:["A"]},
+      {q:"Which logging service is commonly used in AWS for monitoring activities?",opts:{A:"CloudWatch",B:"Cloudflare",C:"Azure Sentinel",D:"Nessus"},ans:["A"]},
+      {q:"What is a risk of improperly managed API keys in the cloud?",opts:{A:"Data loss from hardware",B:"Credential leakage and unauthorized access",C:"High latency",D:"Software crashes"},ans:["B"]},
+      {q:"What role does identity federation play in cloud security?",opts:{A:"Backups data to a remote location",B:"Encrypts cloud disks",C:"Allows single sign-on across systems",D:"Restricts API throttling"},ans:["C"]},
+      {q:"Which of the following is a cloud service attack vector?",opts:{A:"Client misconfiguration",B:"Router firmware update",C:"Power line tapping",D:"RAM overflow"},ans:["A"]},
+      {q:"Which control restricts cloud resource access based on user roles?",opts:{A:"RBAC",B:"DHCP",C:"TCP/IP",D:"MAC filtering"},ans:["A"]},
+      {q:"Why is continuous monitoring important in cloud environments?",opts:{A:"To reduce server size",B:"To avoid patching",C:"To detect and respond to threats in real time",D:"To slow down intrusions"},ans:["C"]},
+      {q:"Which type of encryption protects data stored in the cloud?",opts:{A:"TLS",B:"AES",C:"SHA1",D:"MD5"},ans:["B"]},
+      {q:"Which cloud provider service enables identity management?",opts:{A:"IAM",B:"S3",C:"EC2",D:"RDS"},ans:["A"]},
+      {q:"What is the purpose of cloud security posture management (CSPM)?",opts:{A:"Physical security audits",B:"Network monitoring",C:"Identifying misconfigurations and compliance violations",D:"Device tracking"},ans:["C"]},
+      {q:"Which of the following can mitigate DDoS attacks in cloud?",opts:{A:"Role-based access",B:"Distributed logging",C:"Cloud-based load balancers and WAF",D:"Data compression"},ans:["C"]},
+      {q:"Why is vendor lock-in a concern in cloud computing?",opts:{A:"It restricts user roles",B:"It makes migration difficult",C:"It lowers availability",D:"It disables encryption"},ans:["B"]},
+    ]
+  },
+  {
+    id: 'mod20',
+    name: 'Module 20: Cryptography',
+    questions: [
+      {q:"Which algorithm is considered symmetric encryption?",opts:{A:"RSA",B:"AES",C:"ECC",D:"DSA"},ans:["B"]},
+      {q:"What does a digital signature provide?",opts:{A:"Confidentiality",B:"Non-repudiation",C:"Obfuscation",D:"Compression"},ans:["B"]},
+      {q:"Which encryption method uses two different keys for encryption and decryption?",opts:{A:"Symmetric encryption",B:"Asymmetric encryption",C:"Stream cipher",D:"Block cipher"},ans:["B"]},
+      {q:"What is the key size of AES-256 encryption?",opts:{A:"128 bits",B:"192 bits",C:"256 bits",D:"512 bits"},ans:["C"]},
+      {q:"Which of the following is a hashing algorithm?",opts:{A:"DES",B:"RSA",C:"MD5",D:"Blowfish"},ans:["C"]},
+      {q:"Which of the following is a characteristic of a hash function?",opts:{A:"It is reversible",B:"It produces a variable-length output",C:"It provides one-way encryption",D:"It encrypts data for storage"},ans:["C"]},
+      {q:"What is the purpose of salting passwords before hashing?",opts:{A:"To increase speed",B:"To prevent brute force",C:"To defeat rainbow table attacks",D:"To reduce hash length"},ans:["C"]},
+      {q:"Which standard is used for public key certificates?",opts:{A:"SHA-1",B:"AES-256",C:"X.509",D:"DES"},ans:["C"]},
+      {q:"Which protocol uses asymmetric encryption during the handshake and symmetric thereafter?",opts:{A:"FTP",B:"SSH",C:"TLS",D:"SNMP"},ans:["C"]},
+      {q:"What does PKI stand for?",opts:{A:"Public Key Infrastructure",B:"Private Key Identifier",C:"Public Key Integrator",D:"Password Key Interface"},ans:["A"]},
+      {q:"What is the primary weakness of the MD5 algorithm?",opts:{A:"Long key sizes",B:"Poor performance",C:"Vulnerability to collisions",D:"Lack of availability"},ans:["C"]},
+      {q:"Which algorithm is primarily used in blockchain technology?",opts:{A:"RC4",B:"SHA-256",C:"DES",D:"3DES"},ans:["B"]},
+      {q:"Which of the following uses a public and private key pair?",opts:{A:"AES",B:"Blowfish",C:"RSA",D:"DES"},ans:["C"]},
+      {q:"Which cryptographic function transforms plaintext into ciphertext?",opts:{A:"Encoding",B:"Hashing",C:"Encryption",D:"Compression"},ans:["C"]},
+      {q:"Which encryption technique splits data into fixed-size blocks?",opts:{A:"Stream cipher",B:"Block cipher",C:"Asymmetric cipher",D:"Substitution cipher"},ans:["B"]},
+      {q:"What is the role of a certificate authority (CA) in PKI?",opts:{A:"Create private keys",B:"Issue and manage digital certificates",C:"Encrypt user data",D:"Manage session tokens"},ans:["B"]},
+      {q:"Which of the following is a common use of cryptography?",opts:{A:"Antivirus scanning",B:"Packet routing",C:"Secure communication",D:"Network discovery"},ans:["C"]},
+      {q:"Which tool is commonly used to inspect SSL/TLS certificates?",opts:{A:"Netcat",B:"OpenSSL",C:"Nmap",D:"Burp Suite"},ans:["B"]},
+      {q:"Which type of attack attempts to find two inputs that produce the same hash?",opts:{A:"Brute force",B:"Collision attack",C:"Man-in-the-middle",D:"Replay attack"},ans:["B"]},
+      {q:"What is the key size for RSA commonly used in secure communication?",opts:{A:"128 bits",B:"256 bits",C:"1024 bits",D:"2048 bits"},ans:["D"]},
+      {q:"What cryptographic concept ensures a message has not been altered?",opts:{A:"Confidentiality",B:"Authentication",C:"Integrity",D:"Availability"},ans:["C"]},
+      {q:"Which term describes encrypted data?",opts:{A:"Plaintext",B:"Ciphertext",C:"Metadata",D:"Signature"},ans:["B"]},
+      {q:"What is steganography?",opts:{A:"A form of symmetric encryption",B:"Hiding data within other media files",C:"A type of hashing algorithm",D:"Encoding passwords"},ans:["B"]},
+      {q:"Which function ensures non-repudiation in digital communication?",opts:{A:"Encryption",B:"Hashing",C:"Digital signature",D:"Encoding"},ans:["C"]},
+      {q:"Which cryptographic attack involves trying every possible key?",opts:{A:"Replay attack",B:"Man-in-the-middle",C:"Brute-force attack",D:"Dictionary attack"},ans:["C"]},
+    ]
+  }
+  // Future modules can be added here as additional objects
+];
+
+let selectedModuleId = null;
+
+function startModulePractice(){
+  selectedModuleId = null;
+  // Build module list UI
+  const list = document.getElementById('module-list');
+  list.innerHTML = '';
+  modulePools.forEach(mod => {
+    const item = document.createElement('div');
+    item.className = 'module-item';
+    item.dataset.id = mod.id;
+    item.innerHTML = `
+      <div class="module-item-left">
+        <span class="module-badge">${mod.id.replace('mod','M')}</span>
+        <span class="module-name">${mod.name.replace(/^Module \d+: /,'')}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <span class="module-count">${mod.questions.length} ข้อ</span>
+        <div class="module-check" id="chk-${mod.id}"></div>
+      </div>`;
+    item.addEventListener('click', () => selectModule(mod.id));
+    list.appendChild(item);
+  });
+  document.getElementById('module-modal').style.display = 'flex';
+}
+
+function selectModule(id){
+  selectedModuleId = id;
+  document.querySelectorAll('.module-item').forEach(el => {
+    const active = el.dataset.id === id;
+    el.classList.toggle('active', active);
+    const chk = document.getElementById('chk-' + el.dataset.id);
+    chk.textContent = active ? '✓' : '';
+  });
+}
+
+function closeModuleDialog(){
+  document.getElementById('module-modal').style.display = 'none';
+  selectedModuleId = null;
+}
+
+function confirmModulePractice(){
+  if(!selectedModuleId) return;
+  const mod = modulePools.find(m => m.id === selectedModuleId);
+  if(!mod) return;
+  closeModuleDialog();
+  startModuleMode(mod);
+}
+
+function startModuleMode(mod){
+  mode = 'module';
+  correct = 0; wrong = 0; skipped = 0;
+  answered = false; selected = new Set(); current = 0;
+  startTime = Date.now();
+  examOrder = shuffle([...Array(mod.questions.length).keys()]);
+  // Store module questions separately
+  window._moduleQuestions = mod.questions;
+  window._moduleName = mod.name;
+
+  stopTimer();
+  document.getElementById('timer').style.display = 'none';
+
+  const chip = document.getElementById('mode-chip');
+  chip.className = 'mode-chip chip-m';
+  chip.textContent = mod.id.replace('mod','M') + ' Practice';
+  document.getElementById('score-row').style.display = 'flex';
+
+  showScreen('quiz');
+  renderModuleQ();
+}
+
+function renderModuleQ(){
+  answered = false; selected = new Set();
+  isTranslated = false;
+  document.getElementById('th-box').style.display = 'none';
+  const tBtn = document.getElementById('btn-translate');
+  tBtn.className = 'translate-btn'; tBtn.textContent = '🌐 แปล'; tBtn.onclick = toggleTranslate;
+
+  const pool = window._moduleQuestions;
+  const total = examOrder.length;
+  const q = pool[examOrder[current]];
+  const isMulti = q.ans.length > 1;
+  const pct = Math.round((current / total) * 100);
+
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('q-counter').textContent = `Q ${current+1} / ${total}`;
+  document.getElementById('pct-label').textContent = pct + '%';
+  document.getElementById('q-num').textContent = `QUESTION ${String(current+1).padStart(3,'0')}`;
+  document.getElementById('multi-pill').style.display = isMulti ? 'inline-flex' : 'none';
+
+  const img = document.getElementById('q-img');
+  img.style.display = 'none'; img.src = '';
+
+  document.getElementById('q-text').textContent = q.q;
+
+  const optsEl = document.getElementById('opts');
+  optsEl.innerHTML = '';
+  Object.entries(q.opts).forEach(([key, val]) => {
+    const d = document.createElement('div');
+    d.className = 'opt'; d.dataset.key = key;
+    d.innerHTML = `<span class="opt-key">${key}</span><span class="opt-text">${val}</span>`;
+    d.addEventListener('click', () => selectModuleOpt(d, key, isMulti));
+    optsEl.appendChild(d);
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'none'; fb.className = 'feedback'; fb.textContent = '';
+
+  updateScore();
+  renderModuleFooter(false);
+}
+
+function selectModuleOpt(el, key, isMulti){
+  if(answered) return;
+  if(isMulti){
+    if(selected.has(key)){selected.delete(key); el.classList.remove('sel');}
+    else{selected.add(key); el.classList.add('sel');}
+  } else {
+    document.querySelectorAll('#opts .opt').forEach(o => o.classList.remove('sel'));
+    selected = new Set([key]);
+    el.classList.add('sel');
+  }
+  renderModuleFooter(false);
+}
+
+function renderModuleFooter(afterSubmit){
+  const el = document.getElementById('q-footer');
+  const pool = window._moduleQuestions;
+  const q = pool[examOrder[current]];
+  const total = examOrder.length;
+  el.innerHTML = '';
+  if(!afterSubmit){
+    if(q.ans.length > 1){
+      const h = document.createElement('span');
+      h.className = 'hint-label';
+      h.textContent = `เลือก ${q.ans.length} คำตอบ (เลือกแล้ว ${selected.size})`;
+      el.appendChild(h);
+    }
+    const sk = document.createElement('button');
+    sk.className = 'btn btn-skip'; sk.textContent = 'ข้าม';
+    sk.onclick = () => { skipped++; current < total-1 ? (current++, renderModuleQ()) : finishModuleQuiz(); };
+    el.appendChild(sk);
+    const sub = document.createElement('button');
+    sub.className = 'btn btn-sub'; sub.textContent = 'Submit';
+    sub.disabled = selected.size === 0 || (q.ans.length > 1 && selected.size < q.ans.length);
+    sub.onclick = submitModuleQ;
+    el.appendChild(sub);
+  } else {
+    const isLast = current >= total - 1;
+    if(!isLast){
+      const nx = document.createElement('button');
+      nx.className = 'btn btn-next'; nx.textContent = 'ถัดไป →';
+      nx.onclick = () => { current++; renderModuleQ(); };
+      el.appendChild(nx);
+    } else {
+      const fn = document.createElement('button');
+      fn.className = 'btn btn-finish'; fn.textContent = 'ดูผลสรุป →';
+      fn.onclick = finishModuleQuiz;
+      el.appendChild(fn);
+    }
+  }
+}
+
+function submitModuleQ(){
+  if(answered) return;
+  answered = true;
+  const pool = window._moduleQuestions;
+  const q = pool[examOrder[current]];
+  const isOk = arrEq([...selected].sort(), [...q.ans].sort());
+  if(isOk) correct++; else wrong++;
+  updateScore();
+  document.querySelectorAll('#opts .opt').forEach(o => {
+    const k = o.dataset.key; o.classList.add('locked');
+    if(q.ans.includes(k)) o.className = selected.has(k) ? 'opt locked ok' : 'opt locked hint';
+    else if(selected.has(k)) o.className = 'opt locked bad';
+  });
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  if(isOk){fb.className='feedback fb-ok'; fb.innerHTML='✅ ถูกต้อง! คำตอบ: '+q.ans.join(', ');}
+  else{fb.className='feedback fb-bad'; fb.innerHTML='❌ ผิด! คำตอบที่ถูกต้อง: <strong>'+q.ans.join(', ')+'</strong>';}
+  renderModuleFooter(true);
+}
+
+function finishModuleQuiz(){
+  stopTimer();
+  const total = examOrder.length;
+  const pctTotal = Math.round((correct/total)*100);
+  const badge = document.getElementById('result-badge');
+  badge.className = 'result-badge rb-practice';
+  document.getElementById('rb-pct').textContent = pctTotal + '%';
+  let title = '';
+  if(pctTotal>=90) title='ยอดเยี่ยม! 🏆';
+  else if(pctTotal>=70) title='ผ่าน! ✅';
+  else if(pctTotal>=50) title='พอไหว 📖';
+  else title='ต้องทบทวนเพิ่ม 💡';
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = `${window._moduleName} — ${correct}/${total} ข้อ (${pctTotal}%)`;
+  document.getElementById('f-c').textContent = correct;
+  document.getElementById('f-w').textContent = wrong;
+  document.getElementById('f-s').textContent = skipped;
+  document.getElementById('f-time-box').style.display = 'none';
+  document.getElementById('pass-bar-wrap').style.display = 'none';
+  showScreen('final');
+}
+
+// Patch retryMode to handle module mode
+const _origRetry = retryMode;
+function retryMode(){
+  if(mode === 'module'){
+    const mod = modulePools.find(m => m.id === selectedModuleId) ||
+                modulePools.find(m => m.name === window._moduleName);
+    if(mod){ startModuleMode(mod); return; }
+  }
+  _origRetry();
 }
 
 // init
